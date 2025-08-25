@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="32dp"
+    android:layout_height="32dp"
+    android:layout_margin="2dp">
+
+    <View
+        android:id="@+id/contributionSquare"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/contribution_level_0" />
+
+    <TextView
+        android:id="@+id/dayNumber"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textColor="@color/leetcode_text_primary"
+        android:textSize="10sp"
+        android:textStyle="bold" />
+
+</FrameLayout>

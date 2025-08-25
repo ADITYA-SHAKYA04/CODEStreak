@@ -1,0 +1,16 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.CodeStreak" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/leetcode_orange</item>
+        <item name="colorPrimaryVariant">@color/leetcode_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:colorBackground">@color/leetcode_dark_bg</item>
+        <item name="colorOnBackground">@color/leetcode_text_primary</item>
+        <item name="colorSurface">@color/leetcode_card_bg</item>
+        <item name="colorOnSurface">@color/leetcode_text_primary</item>
+        <item name="android:statusBarColor">@color/leetcode_dark_bg</item>
+    </style>
+</resources>
