@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <!-- Custom Bottom Navigation Active Indicator Style -->
+    <style name="App.Custom.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/text_secondary</item>
+        <item name="android:alpha">0.12</item>
+    </style>
+    
+    <!-- Custom Bottom Navigation Style with Reduced Padding -->
+    <style name="App.Custom.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="itemPaddingTop">0dp</item>
+        <item name="itemPaddingBottom">0dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="itemTextAppearanceInactive">@style/BottomNavTextStyle</item>
+        <item name="itemTextAppearanceActive">@style/BottomNavTextStyle</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
+        <item name="itemIconSize">22dp</item>
+    </style>
+    
+    <!-- Custom Text Style for Bottom Navigation to remove extra margins -->
+    <style name="BottomNavTextStyle" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:layout_marginTop">-2dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">-2dp</item>
+        <item name="android:lineSpacingMultiplier">0.8</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+    
+</resources>

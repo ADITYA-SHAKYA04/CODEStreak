@@ -4,6 +4,10 @@
     
     <solid android:color="@android:color/white" />
     
+    <stroke
+        android:width="0.5dp"
+        android:color="#E0E0E0" />
+    
     <size
         android:width="28dp"
         android:height="28dp" />

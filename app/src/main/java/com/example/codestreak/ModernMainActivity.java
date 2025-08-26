@@ -40,7 +40,6 @@ import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
@@ -53,12 +52,16 @@ public class ModernMainActivity extends AppCompatActivity {
     // UI Components
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
-    private BottomNavigationView bottomNavigation;
+    private LinearLayout navHome, navProgress, navCards, navRevision;
+    private ImageView homeIcon, progressIcon, cardsIcon, revisionIcon;
+    private TextView homeText, progressText, cardsText, revisionText;
+    private View homeIndicator, progressIndicator, cardsIndicator, revisionIndicator;
+    private com.google.android.material.card.MaterialCardView bottomNavCard;
     private FrameLayout themeToggleContainer;
     private com.google.android.material.appbar.MaterialToolbar toolbar;
     private ImageButton menuButton;
     private View toggleThumb;
-    private ImageView themeIcon;
+    private ImageView themeIcon, sunIcon, moonIcon;
     private TextView welcomeText;
     private TextView currentStreakText, longestStreakText;
     private TextView easyCountTableText, mediumCountTableText, hardCountTableText, totalCountText;
@@ -125,12 +128,15 @@ public class ModernMainActivity extends AppCompatActivity {
     private void initializeViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
         navigationView = findViewById(R.id.navigationView);
-        bottomNavigation = findViewById(R.id.bottomNavigation);
+        initializeCustomBottomNavigation();
+        bottomNavCard = findViewById(R.id.bottomNavCard);
         themeToggleContainer = findViewById(R.id.themeToggleContainer);
         toolbar = findViewById(R.id.toolbar);
         menuButton = findViewById(R.id.menuButton);
         toggleThumb = findViewById(R.id.toggleThumb);
         themeIcon = findViewById(R.id.themeIcon);
+        sunIcon = findViewById(R.id.sunIcon);
+        moonIcon = findViewById(R.id.moonIcon);
         welcomeText = findViewById(R.id.welcomeText);
         currentStreakText = findViewById(R.id.currentStreakText);
         longestStreakText = findViewById(R.id.longestStreakText);
@@ -171,11 +177,25 @@ public class ModernMainActivity extends AppCompatActivity {
     }
     
     private void updateThemeToggleAppearance(boolean animate) {
-        float startX = isDarkTheme ? 0f : 26f;
-        float endX = isDarkTheme ? 26f : 0f;
+        // Calculate complete slide positions
+        // Light mode: thumb on left (2dp), Dark mode: thumb on right (26dp)
+        float lightModeThumbX = 2f;
+        float darkModeThumbX = 26f;
+        
+        // Active icon positions (centered on thumb)
+        float lightModeIconX = 6f;  // 2 + 4dp margin for centering
+        float darkModeIconX = 30f;  // 26 + 4dp margin for centering
+        
+        float targetThumbX = isDarkTheme ? darkModeThumbX : lightModeThumbX;
+        float targetIconX = isDarkTheme ? darkModeIconX : lightModeIconX;
         
         if (animate) {
-            ValueAnimator thumbAnimator = ValueAnimator.ofFloat(startX, endX);
+            // Get current positions
+            float currentThumbX = toggleThumb.getTranslationX();
+            float currentIconX = themeIcon.getTranslationX();
+            
+            // Animate thumb sliding completely across
+            ValueAnimator thumbAnimator = ValueAnimator.ofFloat(currentThumbX, targetThumbX);
             thumbAnimator.setDuration(300);
             thumbAnimator.setInterpolator(new DecelerateInterpolator());
             thumbAnimator.addUpdateListener(animation -> {
@@ -184,13 +204,54 @@ public class ModernMainActivity extends AppCompatActivity {
             });
             thumbAnimator.start();
             
-            // Animate icon change
+            // Animate active icon moving with thumb
+            ValueAnimator iconMoveAnimator = ValueAnimator.ofFloat(currentIconX, targetIconX);
+            iconMoveAnimator.setDuration(300);
+            iconMoveAnimator.setInterpolator(new DecelerateInterpolator());
+            iconMoveAnimator.addUpdateListener(animation -> {
+                float value = (Float) animation.getAnimatedValue();
+                themeIcon.setTranslationX(value);
+            });
+            iconMoveAnimator.start();
+            
+            // Animate track background color
+            int currentColor = isDarkTheme ? 
+                getResources().getColor(R.color.toggle_track_light, getTheme()) :
+                getResources().getColor(R.color.toggle_track_dark, getTheme());
+            int targetColor = isDarkTheme ? 
+                getResources().getColor(R.color.toggle_track_dark, getTheme()) :
+                getResources().getColor(R.color.toggle_track_light, getTheme());
+                
+            ValueAnimator colorAnimator = ValueAnimator.ofArgb(currentColor, targetColor);
+            colorAnimator.setDuration(300);
+            colorAnimator.addUpdateListener(animation -> {
+                int color = (Integer) animation.getAnimatedValue();
+                themeToggleContainer.setBackgroundColor(color);
+            });
+            colorAnimator.start();
+            
+            // Animate background icons visibility
+            if (isDarkTheme) {
+                // Switching to dark mode - highlight moon, dim sun
+                sunIcon.animate().alpha(0.3f).setDuration(200);
+                moonIcon.animate().alpha(1.0f).setDuration(200);
+            } else {
+                // Switching to light mode - highlight sun, dim moon
+                sunIcon.animate().alpha(1.0f).setDuration(200);
+                moonIcon.animate().alpha(0.3f).setDuration(200);
+            }
+            
+            // Animate active icon change with scale effect
             themeIcon.animate()
-                .scaleX(0f)
-                .scaleY(0f)
+                .scaleX(0.8f)
+                .scaleY(0.8f)
                 .setDuration(150)
                 .withEndAction(() -> {
+                    // Change icon
                     themeIcon.setImageResource(isDarkTheme ? R.drawable.ic_moon : R.drawable.ic_sun);
+                    themeIcon.setColorFilter(android.graphics.Color.WHITE);
+                    
+                    // Scale back up
                     themeIcon.animate()
                         .scaleX(1f)
                         .scaleY(1f)
@@ -198,9 +259,28 @@ public class ModernMainActivity extends AppCompatActivity {
                         .start();
                 })
                 .start();
+                
         } else {
-            toggleThumb.setTranslationX(endX);
+            // Set positions immediately without animation
+            toggleThumb.setTranslationX(targetThumbX);
+            themeIcon.setTranslationX(targetIconX);
             themeIcon.setImageResource(isDarkTheme ? R.drawable.ic_moon : R.drawable.ic_sun);
+            themeIcon.setColorFilter(android.graphics.Color.WHITE);
+            
+            // Set track color
+            int trackColor = isDarkTheme ? 
+                getResources().getColor(R.color.toggle_track_dark, getTheme()) :
+                getResources().getColor(R.color.toggle_track_light, getTheme());
+            themeToggleContainer.setBackgroundColor(trackColor);
+            
+            // Set background icons visibility
+            if (isDarkTheme) {
+                sunIcon.setAlpha(0.3f);
+                moonIcon.setAlpha(1.0f);
+            } else {
+                sunIcon.setAlpha(1.0f);
+                moonIcon.setAlpha(0.3f);
+            }
         }
     }
     
@@ -226,15 +306,18 @@ public class ModernMainActivity extends AppCompatActivity {
         if (isDarkTheme) {
             // Dark theme colors
             rootView.setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
-            themeToggleContainer.setBackgroundColor(getResources().getColor(R.color.toggle_track_dark, getTheme()));
             
             // Update drawer layout background
             drawerLayout.setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
             
             // Update all major UI elements with dark backgrounds
             findViewById(R.id.appBarLayout).setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
-            findViewById(R.id.bottomNavigation).setBackgroundColor(getResources().getColor(R.color.leetcode_card_bg, getTheme()));
             findViewById(R.id.navigationView).setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
+            
+            // Update floating bottom navigation card for dark theme
+            if (bottomNavCard != null) {
+                bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.leetcode_card_bg, getTheme()));
+            }
             
             // Update toolbar background for dark theme
             if (toolbar != null) {
@@ -322,15 +405,18 @@ public class ModernMainActivity extends AppCompatActivity {
         } else {
             // Light theme colors
             rootView.setBackgroundColor(getResources().getColor(R.color.modern_background, getTheme()));
-            themeToggleContainer.setBackgroundColor(getResources().getColor(R.color.toggle_track_light, getTheme()));
             
             // Update drawer layout background
             drawerLayout.setBackgroundColor(getResources().getColor(R.color.modern_background, getTheme()));
             
             // Update all major UI elements with light backgrounds
             findViewById(R.id.appBarLayout).setBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
-            findViewById(R.id.bottomNavigation).setBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
             findViewById(R.id.navigationView).setBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
+            
+            // Update floating bottom navigation card for light theme
+            if (bottomNavCard != null) {
+                bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
+            }
             
             // Update toolbar background for light theme
             if (toolbar != null) {
@@ -473,26 +559,102 @@ public class ModernMainActivity extends AppCompatActivity {
         });
     }
     
+    private void initializeCustomBottomNavigation() {
+        // Find navigation items
+        navHome = findViewById(R.id.nav_home);
+        navProgress = findViewById(R.id.nav_progress);
+        navCards = findViewById(R.id.nav_cards);
+        navRevision = findViewById(R.id.nav_revision);
+        
+        // Find icons
+        homeIcon = findViewById(R.id.home_icon);
+        progressIcon = findViewById(R.id.progress_icon);
+        cardsIcon = findViewById(R.id.cards_icon);
+        revisionIcon = findViewById(R.id.revision_icon);
+        
+        // Find text labels
+        homeText = findViewById(R.id.home_text);
+        progressText = findViewById(R.id.progress_text);
+        cardsText = findViewById(R.id.cards_text);
+        revisionText = findViewById(R.id.revision_text);
+        
+        // Find indicators
+        homeIndicator = findViewById(R.id.home_indicator);
+        progressIndicator = findViewById(R.id.progress_indicator);
+        cardsIndicator = findViewById(R.id.cards_indicator);
+        revisionIndicator = findViewById(R.id.revision_indicator);
+    }
+
     private void setupBottomNavigation() {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            
-            if (id == R.id.nav_home) {
-                // Already on home
-                return true;
-            } else if (id == R.id.nav_progress) {
-                // Handle progress
-                return true;
-            } else if (id == R.id.nav_cards) {
-                // Handle cards
-                return true;
-            } else if (id == R.id.nav_revision) {
-                // Handle revision
-                return true;
-            }
-            
-            return false;
-        });
+        navHome.setOnClickListener(v -> selectNavItem(0));
+        navProgress.setOnClickListener(v -> selectNavItem(1));
+        navCards.setOnClickListener(v -> selectNavItem(2));
+        navRevision.setOnClickListener(v -> selectNavItem(3));
+        
+        // Set home as default selected
+        selectNavItem(0);
+    }
+    
+    private void selectNavItem(int index) {
+        // Reset all items to inactive state
+        resetAllNavItems();
+        
+        int activeColor = getColor(R.color.accent_secondary);
+        int inactiveColor = getColor(R.color.text_secondary);
+        
+        switch (index) {
+            case 0: // Home
+                homeIndicator.setVisibility(View.VISIBLE);
+                homeIcon.setColorFilter(activeColor);
+                homeText.setTextColor(activeColor);
+                homeText.setTypeface(null, android.graphics.Typeface.BOLD);
+                break;
+            case 1: // Progress
+                progressIndicator.setVisibility(View.VISIBLE);
+                progressIcon.setColorFilter(activeColor);
+                progressText.setTextColor(activeColor);
+                progressText.setTypeface(null, android.graphics.Typeface.BOLD);
+                break;
+            case 2: // Cards
+                cardsIndicator.setVisibility(View.VISIBLE);
+                cardsIcon.setColorFilter(activeColor);
+                cardsText.setTextColor(activeColor);
+                cardsText.setTypeface(null, android.graphics.Typeface.BOLD);
+                break;
+            case 3: // Revision
+                revisionIndicator.setVisibility(View.VISIBLE);
+                revisionIcon.setColorFilter(activeColor);
+                revisionText.setTextColor(activeColor);
+                revisionText.setTypeface(null, android.graphics.Typeface.BOLD);
+                break;
+        }
+    }
+    
+    private void resetAllNavItems() {
+        int inactiveColor = getColor(R.color.text_secondary);
+        
+        // Hide all indicators
+        homeIndicator.setVisibility(View.INVISIBLE);
+        progressIndicator.setVisibility(View.INVISIBLE);
+        cardsIndicator.setVisibility(View.INVISIBLE);
+        revisionIndicator.setVisibility(View.INVISIBLE);
+        
+        // Set all icons to inactive color
+        homeIcon.setColorFilter(inactiveColor);
+        progressIcon.setColorFilter(inactiveColor);
+        cardsIcon.setColorFilter(inactiveColor);
+        revisionIcon.setColorFilter(inactiveColor);
+        
+        // Set all text to inactive color and normal weight
+        homeText.setTextColor(inactiveColor);
+        progressText.setTextColor(inactiveColor);
+        cardsText.setTextColor(inactiveColor);
+        revisionText.setTextColor(inactiveColor);
+        
+        homeText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        progressText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        cardsText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        revisionText.setTypeface(null, android.graphics.Typeface.NORMAL);
     }
     
     private void setupPieChart() {
@@ -563,7 +725,7 @@ public class ModernMainActivity extends AppCompatActivity {
         pieChart.setData(data);
         
         int totalProblems = easyProblems + mediumProblems + hardProblems;
-        pieChart.setCenterText("Total\\n" + totalProblems);
+        pieChart.setCenterText("Total\n" + totalProblems);
         
         // Update center text color based on current theme
         if (isDarkTheme) {

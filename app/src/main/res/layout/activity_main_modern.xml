@@ -84,22 +84,45 @@
                         android:clickable="true"
                         android:focusable="true">
 
+                        <!-- Sun Icon (Light Mode - Left Side) -->
+                        <ImageView
+                            android:id="@+id/sunIcon"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="8dp"
+                            android:src="@drawable/ic_sun"
+                            android:alpha="0.6"
+                            app:tint="@color/accent_secondary" />
+
+                        <!-- Moon Icon (Dark Mode - Right Side) -->
+                        <ImageView
+                            android:id="@+id/moonIcon"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center_vertical|end"
+                            android:layout_marginEnd="8dp"
+                            android:src="@drawable/ic_moon"
+                            android:alpha="0.6"
+                            app:tint="@color/text_secondary" />
+
+                        <!-- Sliding Thumb -->
                         <View
                             android:id="@+id/toggleThumb"
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:layout_margin="2dp"
                             android:background="@drawable/toggle_thumb"
-                            android:elevation="2dp" />
+                            android:elevation="4dp" />
 
+                        <!-- Active Theme Icon (moves with thumb) -->
                         <ImageView
                             android:id="@+id/themeIcon"
                             android:layout_width="20dp"
-                            android:layout_marginEnd="5dp"
-                            android:layout_height="match_parent"
-                            android:layout_marginLeft="30dp"
-                            android:layout_gravity="end"
-                            android:src="@drawable/ic_moon"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="6dp"
+                            android:src="@drawable/ic_sun"
                             app:tint="@color/text_primary" />
 
                     </FrameLayout>
@@ -114,6 +137,8 @@
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingBottom="110dp"
+            android:clipToPadding="false"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <LinearLayout
@@ -514,17 +539,35 @@
 
         </androidx.core.widget.NestedScrollView>
 
-        <!-- Modern Bottom Navigation -->
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
+        <!-- Modern Floating Bottom Navigation -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@color/surface_primary"
-            android:elevation="8dp"
-            app:itemIconTint="@color/bottom_nav_tint"
-            app:itemTextColor="@color/bottom_nav_tint"
-            app:menu="@menu/bottom_navigation" />
+            android:orientation="vertical">
+
+            <!-- Floating Container -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/bottomNavCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="10dp"
+                app:cardBackgroundColor="@color/surface_primary"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="16dp"
+                app:cardMaxElevation="16dp">
+
+                <include 
+                    android:id="@+id/customBottomNavigation"
+                    layout="@layout/custom_bottom_navigation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
