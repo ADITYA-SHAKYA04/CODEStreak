@@ -1307,14 +1307,16 @@ public class ModernMainActivity extends AppCompatActivity {
                 holder.goalCategory.setTextColor(getResources().getColor(R.color.text_secondary, getTheme()));
             }
             
-            // Set difficulty badge color
-            int colorRes = R.color.easy_color;
+            // Set difficulty badge background and text color
             if ("Medium".equals(goal.getDifficulty())) {
-                colorRes = R.color.medium_color;
+                holder.difficultyBadge.setBackgroundResource(R.drawable.difficulty_badge_medium);
             } else if ("Hard".equals(goal.getDifficulty())) {
-                colorRes = R.color.hard_color;
+                holder.difficultyBadge.setBackgroundResource(R.drawable.difficulty_badge_hard);
+            } else {
+                holder.difficultyBadge.setBackgroundResource(R.drawable.difficulty_badge_easy);
             }
-            holder.difficultyBadge.setTextColor(getResources().getColor(colorRes, getTheme()));
+            // Set text color to white for all difficulty badges
+            holder.difficultyBadge.setTextColor(Color.WHITE);
         }
         
         @Override
