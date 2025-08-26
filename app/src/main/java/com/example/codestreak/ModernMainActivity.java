@@ -776,12 +776,143 @@ public class ModernMainActivity extends AppCompatActivity {
     private void setupDailyGoals() {
         dailyGoalsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         
-        // Sample goals data
+        // Start with sample data to ensure UI works
         List<DailyGoal> goals = generateSampleGoals();
         DailyGoalsAdapter adapter = new DailyGoalsAdapter(goals);
         dailyGoalsRecyclerView.setAdapter(adapter);
-        
         goalCountBadge.setText(String.valueOf(goals.size()));
+        
+        System.out.println("DEBUG: setupDailyGoals - Loaded " + goals.size() + " sample goals");
+        
+        // Then try to fetch from API (will replace sample data if successful)
+        fetchDailyGoalsFromAPI();
+    }
+    
+    private void fetchDailyGoalsFromAPI() {
+        System.out.println("DEBUG: Starting API fetch for daily goals");
+        
+        LeetCodeAPI api = new LeetCodeAPI();
+        
+        // Try to get daily challenge first
+        api.getDailyCodingChallenge(new LeetCodeAPI.LeetCodeCallback() {
+            @Override
+            public void onSuccess(String response) {
+                System.out.println("DEBUG: Daily challenge API success");
+                runOnUiThread(() -> {
+                    try {
+                        List<DailyGoal> apiGoals = new ArrayList<>();
+                        
+                        // Parse daily challenge
+                        org.json.JSONObject jsonResponse = new org.json.JSONObject(response);
+                        System.out.println("DEBUG: API Response: " + response.substring(0, Math.min(200, response.length())) + "...");
+                        
+                        if (jsonResponse.has("data")) {
+                            org.json.JSONObject data = jsonResponse.getJSONObject("data");
+                            if (data.has("activeDailyCodingChallengeQuestion") && 
+                                !data.isNull("activeDailyCodingChallengeQuestion")) {
+                                
+                                org.json.JSONObject dailyChallenge = data.getJSONObject("activeDailyCodingChallengeQuestion");
+                                org.json.JSONObject question = dailyChallenge.getJSONObject("question");
+                                
+                                String title = question.getString("title");
+                                String difficulty = question.getString("difficulty");
+                                String category = "Daily Challenge";
+                                
+                                // Get the primary topic tag as category if available
+                                if (question.has("topicTags") && question.getJSONArray("topicTags").length() > 0) {
+                                    category = question.getJSONArray("topicTags").getJSONObject(0).getString("name");
+                                }
+                                
+                                apiGoals.add(new DailyGoal(title, category, difficulty, false));
+                                System.out.println("DEBUG: Added daily challenge - " + title + " (" + difficulty + ")");
+                                
+                                // Update UI with daily challenge
+                                updateGoalsAdapter(apiGoals);
+                            }
+                        }
+                        
+                        // Add a couple more problems for variety
+                        fetchSimplePracticeProblems(apiGoals);
+                        
+                    } catch (Exception e) {
+                        System.err.println("DEBUG: Error parsing daily challenge: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
+            }
+            
+            @Override
+            public void onError(Exception error) {
+                System.err.println("DEBUG: Error fetching daily challenge: " + error.getMessage());
+                // Keep the sample data that's already loaded
+            }
+        });
+    }
+    
+    private void fetchSimplePracticeProblems(List<DailyGoal> existingGoals) {
+        LeetCodeAPI api = new LeetCodeAPI();
+        
+        // Just fetch one easy problem for now
+        api.getRandomProblem("Easy", new LeetCodeAPI.LeetCodeCallback() {
+            @Override
+            public void onSuccess(String response) {
+                runOnUiThread(() -> {
+                    try {
+                        org.json.JSONObject jsonResponse = new org.json.JSONObject(response);
+                        if (jsonResponse.has("data")) {
+                            org.json.JSONObject data = jsonResponse.getJSONObject("data");
+                            if (data.has("problemsetQuestionList")) {
+                                org.json.JSONObject problemList = data.getJSONObject("problemsetQuestionList");
+                                if (problemList.has("questions")) {
+                                    org.json.JSONArray questions = problemList.getJSONArray("questions");
+                                    if (questions.length() > 0) {
+                                        org.json.JSONObject question = questions.getJSONObject(0);
+                                        
+                                        String title = question.getString("title");
+                                        String difficulty = question.getString("difficulty");
+                                        String category = "Practice";
+                                        
+                                        if (question.has("topicTags") && question.getJSONArray("topicTags").length() > 0) {
+                                            category = question.getJSONArray("topicTags").getJSONObject(0).getString("name");
+                                        }
+                                        
+                                        existingGoals.add(new DailyGoal(title, category, difficulty, false));
+                                        System.out.println("DEBUG: Added practice problem - " + title);
+                                        
+                                        // Update UI
+                                        updateGoalsAdapter(existingGoals);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("DEBUG: Error parsing practice problem: " + e.getMessage());
+                    }
+                });
+            }
+            
+            @Override
+            public void onError(Exception error) {
+                System.err.println("DEBUG: Error fetching practice problem: " + error.getMessage());
+            }
+        });
+    }
+    
+    private void updateGoalsAdapter(List<DailyGoal> goals) {
+        System.out.println("DEBUG: updateGoalsAdapter called with " + goals.size() + " goals");
+        DailyGoalsAdapter adapter = new DailyGoalsAdapter(goals);
+        dailyGoalsRecyclerView.setAdapter(adapter);
+        goalCountBadge.setText(String.valueOf(goals.size()));
+        System.out.println("DEBUG: Adapter updated and badge set to " + goals.size());
+    }
+    
+    private void loadFallbackGoals() {
+        // Fallback to sample data if API fails
+        List<DailyGoal> goals = generateSampleGoals();
+        DailyGoalsAdapter adapter = new DailyGoalsAdapter(goals);
+        dailyGoalsRecyclerView.setAdapter(adapter);
+        goalCountBadge.setText(String.valueOf(goals.size()));
+        System.out.println("DEBUG: Loaded fallback sample goals");
     }
     
     private List<DailyGoal> generateSampleGoals() {
@@ -1272,10 +1403,12 @@ public class ModernMainActivity extends AppCompatActivity {
         
         public DailyGoalsAdapter(List<DailyGoal> goals) {
             this.goals = goals;
+            System.out.println("DEBUG: DailyGoalsAdapter created with " + goals.size() + " goals");
         }
         
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            System.out.println("DEBUG: onCreateViewHolder called");
             View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_daily_goal, parent, false);
             return new ViewHolder(view);
@@ -1283,10 +1416,13 @@ public class ModernMainActivity extends AppCompatActivity {
         
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
+            System.out.println("DEBUG: onBindViewHolder called for position " + position);
             DailyGoal goal = goals.get(position);
             holder.goalTitle.setText(goal.getTitle());
             holder.goalCategory.setText(goal.getCategory());
             holder.difficultyBadge.setText(goal.getDifficulty());
+            
+            System.out.println("DEBUG: Binding goal - " + goal.getTitle() + " (" + goal.getDifficulty() + ")");
             
             // Apply theme-based colors to the card and text
             if (isDarkTheme) {
@@ -1321,6 +1457,7 @@ public class ModernMainActivity extends AppCompatActivity {
         
         @Override
         public int getItemCount() {
+            System.out.println("DEBUG: getItemCount called - returning " + goals.size());
             return goals.size();
         }
         
