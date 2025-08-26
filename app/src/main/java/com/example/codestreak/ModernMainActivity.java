@@ -1470,7 +1470,7 @@ public class ModernMainActivity extends AppCompatActivity {
                 goalTitle = itemView.findViewById(R.id.goalTitle);
                 goalCategory = itemView.findViewById(R.id.goalCategory);
                 difficultyBadge = itemView.findViewById(R.id.difficultyBadge);
-                statusIndicator = itemView.findViewById(R.id.statusIndicator);
+//                statusIndicator = itemView.findViewById(R.id.statusIndicator);
             }
         }
     }

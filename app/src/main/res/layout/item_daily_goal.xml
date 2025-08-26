@@ -17,12 +17,12 @@
         android:gravity="center_vertical">
 
         <!-- Status Indicator -->
-        <View
-            android:id="@+id/statusIndicator"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="@drawable/goal_status_incomplete"
-            android:layout_marginEnd="16dp" />
+<!--        <View-->
+<!--            android:id="@+id/statusIndicator"-->
+<!--            android:layout_width="24dp"-->
+<!--            android:layout_height="24dp"-->
+<!--            android:background="@drawable/goal_status_incomplete"-->
+<!--            android:layout_marginEnd="16dp" />-->
 
         <!-- Goal Content -->
         <LinearLayout

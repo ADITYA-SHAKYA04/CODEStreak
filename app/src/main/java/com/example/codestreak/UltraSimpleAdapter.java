@@ -87,42 +87,42 @@ public class UltraSimpleAdapter extends RecyclerView.Adapter<UltraSimpleAdapter.
                            today.get(Calendar.DAY_OF_MONTH) == dayNumber);
         }
         
-        // SUPER EXPLICIT COLOR APPLICATION - THIS WORKS!
-        int color;
+        // SUPER EXPLICIT COLOR APPLICATION WITH CURVED BACKGROUNDS
+        int backgroundResource;
         if (isCurrentDay) {
-            // Highlight current day with blue/accent color
-            color = 0xFF2196F3; // Blue for current day
+            // Highlight current day with blue curved background
+            backgroundResource = R.drawable.calendar_date_current;
         } else {
             switch (level) {
                 case 0:
-                    color = 0xFF161B22; // Dark gray
+                    backgroundResource = R.drawable.calendar_date_empty;
                     break;
                 case 1:
-                    color = 0xFF0E4429; // Dark green
+                    backgroundResource = R.drawable.calendar_date_level1;
                     break;
                 case 2:
-                    color = 0xFF006D32; // Medium green
+                    backgroundResource = R.drawable.calendar_date_level2;
                     break;
                 case 3:
-                    color = 0xFF26A641; // Light green
+                    backgroundResource = R.drawable.calendar_date_level3;
                     break;
                 case 4:
                 default:
-                    color = 0xFF39D353; // Bright green
+                    backgroundResource = R.drawable.calendar_date_level4;
                     break;
             }
         }
         
-        holder.square.setBackgroundColor(color);
+        holder.square.setBackgroundResource(backgroundResource);
         
-        // Show day number
+        // Show day number with appropriate text color
         if (dayNumber > 0) {
             holder.dayNumber.setText(String.valueOf(dayNumber));
-            // Use contrasting text color for current day
+            // Use appropriate text color based on background
             if (isCurrentDay) {
-                holder.dayNumber.setTextColor(Color.WHITE);
+                holder.dayNumber.setTextColor(Color.WHITE); // Blue text for current day (light background)
             } else {
-                holder.dayNumber.setTextColor(Color.WHITE);
+                holder.dayNumber.setTextColor(Color.WHITE); // White text for dark backgrounds (both empty and green)
             }
         } else {
             holder.dayNumber.setText(""); // Clear text for empty cells
@@ -140,7 +140,7 @@ public class UltraSimpleAdapter extends RecyclerView.Adapter<UltraSimpleAdapter.
             holder.square.setOnClickListener(null); // Remove click listener for inactive days
         }
         
-        System.out.println("ULTRA DEBUG: Position " + position + " -> Day " + dayNumber + " -> " + problems + " problems -> Level " + level + " -> Color: " + Integer.toHexString(color));
+        System.out.println("ULTRA DEBUG: Position " + position + " -> Day " + dayNumber + " -> " + problems + " problems -> Level " + level + " -> Background drawable");
     }
 
     @Override
