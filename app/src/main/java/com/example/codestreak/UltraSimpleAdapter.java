@@ -15,6 +15,12 @@ public class UltraSimpleAdapter extends RecyclerView.Adapter<UltraSimpleAdapter.
     
     private List<Integer> data;
     private Calendar currentCalendar;
+    private OnDayClickListener onDayClickListener;
+    
+    // Interface for day click events
+    public interface OnDayClickListener {
+        void onDayClicked(int dayNumber, int problemCount, View clickedView);
+    }
 
     public UltraSimpleAdapter() {
         this.data = new ArrayList<>();
@@ -27,6 +33,10 @@ public class UltraSimpleAdapter extends RecyclerView.Adapter<UltraSimpleAdapter.
         
         // Don't create hardcoded patterns - only show real data
         System.out.println("ULTRA: Constructor with " + this.data.size() + " data points");
+    }
+    
+    public void setOnDayClickListener(OnDayClickListener listener) {
+        this.onDayClickListener = listener;
     }
     
     // No hardcoded patterns - removed createHardcodedPattern method
@@ -58,6 +68,7 @@ public class UltraSimpleAdapter extends RecyclerView.Adapter<UltraSimpleAdapter.
         if (problems == -1) {
             holder.square.setVisibility(View.INVISIBLE);
             holder.dayNumber.setVisibility(View.INVISIBLE);
+            holder.square.setOnClickListener(null); // Remove click listener for empty cells
             return;
         }
         
@@ -97,6 +108,18 @@ public class UltraSimpleAdapter extends RecyclerView.Adapter<UltraSimpleAdapter.
             holder.dayNumber.setText(String.valueOf(level)); // Show level for debugging
         }
         holder.dayNumber.setTextColor(Color.WHITE);
+        
+        // Add click listener for squares with activity (level > 0)
+        if (level > 0 && onDayClickListener != null && dayNumber > 0) {
+            holder.square.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onDayClickListener.onDayClicked(dayNumber, problems, v);
+                }
+            });
+        } else {
+            holder.square.setOnClickListener(null); // Remove click listener for inactive days
+        }
         
         System.out.println("ULTRA DEBUG: Position " + position + " -> Day " + dayNumber + " -> " + problems + " problems -> Level " + level + " -> Color: " + Integer.toHexString(color));
     }

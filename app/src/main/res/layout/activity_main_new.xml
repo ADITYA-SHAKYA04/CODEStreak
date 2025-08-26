@@ -16,7 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/leetcode_dark_bg"
+            android:background="?attr/colorPrimary"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -312,7 +312,133 @@
 
                     </LinearLayout>
 
-                    <!-- Pie Chart with Side Table -->
+                    <!-- Problem Stats Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="24dp">
+
+                        <!-- Easy Problems -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_margin="2dp"
+                            app:cardBackgroundColor="@color/leetcode_card_bg"
+                            app:cardCornerRadius="8dp"
+                            app:cardElevation="2dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="12dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Easy"
+                                    android:textColor="@color/leetcode_easy"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/easyCountText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="45"
+                                    android:textColor="@color/leetcode_text_primary"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Medium Problems -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_margin="2dp"
+                            app:cardBackgroundColor="@color/leetcode_card_bg"
+                            app:cardCornerRadius="8dp"
+                            app:cardElevation="2dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="12dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Medium"
+                                    android:textColor="@color/leetcode_medium"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/mediumCountText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="71"
+                                    android:textColor="@color/leetcode_text_primary"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Hard Problems -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_margin="2dp"
+                            app:cardBackgroundColor="@color/leetcode_card_bg"
+                            app:cardCornerRadius="8dp"
+                            app:cardElevation="2dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="12dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Hard"
+                                    android:textColor="@color/leetcode_hard"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/hardCountText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="11"
+                                    android:textColor="@color/leetcode_text_primary"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                        </androidx.cardview.widget.CardView>
+
+                    </LinearLayout>
+
+                    <!-- Pie Chart -->
                     <androidx.cardview.widget.CardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -334,180 +460,12 @@
                                 android:textColor="@color/leetcode_text_primary"
                                 android:textSize="18sp"
                                 android:textStyle="bold"
-                                android:layout_gravity="center_horizontal"
                                 android:layout_marginBottom="16dp" />
 
-                            <!-- Horizontal Layout: Pie Chart + Stats Table -->
-                            <LinearLayout
+                            <com.github.mikephil.charting.charts.PieChart
+                                android:id="@+id/pieChart"
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical">
-
-                                <!-- Pie Chart (Left Side) -->
-                                <com.github.mikephil.charting.charts.PieChart
-                                    android:id="@+id/pieChart"
-                                    android:layout_width="0dp"
-                                    android:layout_height="200dp"
-                                    android:layout_weight="1" />
-
-                                <!-- Stats Table (Right Side) -->
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:padding="16dp"
-                                    android:gravity="center">
-
-                                    <!-- Total Problems Header -->
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Total Problems"
-                                        android:textColor="@color/leetcode_text_primary"
-                                        android:textSize="16sp"
-                                        android:textStyle="bold"
-                                        android:layout_marginBottom="8dp" />
-
-                                    <!-- Easy Row -->
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="center_vertical"
-                                        android:layout_marginBottom="8dp">
-
-                                        <View
-                                            android:layout_width="12dp"
-                                            android:layout_height="12dp"
-                                            android:background="@color/leetcode_easy"
-                                            android:layout_marginEnd="8dp" />
-
-                                        <TextView
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:text="Easy"
-                                            android:textColor="@color/leetcode_text_secondary"
-                                            android:textSize="14sp" />
-
-                                        <TextView
-                                            android:id="@+id/easyCountTableText"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="45"
-                                            android:textColor="@color/leetcode_text_primary"
-                                            android:textSize="14sp"
-                                            android:textStyle="bold" />
-
-                                    </LinearLayout>
-
-                                    <!-- Medium Row -->
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="center_vertical"
-                                        android:layout_marginBottom="8dp">
-
-                                        <View
-                                            android:layout_width="12dp"
-                                            android:layout_height="12dp"
-                                            android:background="@color/leetcode_medium"
-                                            android:layout_marginEnd="8dp" />
-
-                                        <TextView
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:text="Medium"
-                                            android:textColor="@color/leetcode_text_secondary"
-                                            android:textSize="14sp" />
-
-                                        <TextView
-                                            android:id="@+id/mediumCountTableText"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="71"
-                                            android:textColor="@color/leetcode_text_primary"
-                                            android:textSize="14sp"
-                                            android:textStyle="bold" />
-
-                                    </LinearLayout>
-
-                                    <!-- Hard Row -->
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="center_vertical"
-                                        android:layout_marginBottom="12dp">
-
-                                        <View
-                                            android:layout_width="12dp"
-                                            android:layout_height="12dp"
-                                            android:background="@color/leetcode_hard"
-                                            android:layout_marginEnd="8dp" />
-
-                                        <TextView
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:text="Hard"
-                                            android:textColor="@color/leetcode_text_secondary"
-                                            android:textSize="14sp" />
-
-                                        <TextView
-                                            android:id="@+id/hardCountTableText"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="11"
-                                            android:textColor="@color/leetcode_text_primary"
-                                            android:textSize="14sp"
-                                            android:textStyle="bold" />
-
-                                    </LinearLayout>
-
-                                    <!-- Divider -->
-                                    <View
-                                        android:layout_width="match_parent"
-                                        android:layout_height="1dp"
-                                        android:background="@color/leetcode_text_secondary"
-                                        android:layout_marginVertical="8dp"
-                                        android:alpha="0.3" />
-
-                                    <!-- Total Row -->
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="center_vertical">
-
-                                        <TextView
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:text="Total"
-                                            android:textColor="@color/leetcode_text_primary"
-                                            android:textSize="16sp"
-                                            android:textStyle="bold"
-                                            android:layout_marginStart="20dp" />
-
-                                        <TextView
-                                            android:id="@+id/totalCountText"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="127"
-                                            android:textColor="@color/leetcode_text_primary"
-                                            android:textSize="18sp"
-                                            android:textStyle="bold" />
-
-                                    </LinearLayout>
-
-                                </LinearLayout>
-
-                            </LinearLayout>
+                                android:layout_height="200dp" />
 
                         </LinearLayout>
 

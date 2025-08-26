@@ -22,6 +22,11 @@
     <color name="hard_color">#FF375F</color>
     <color name="hard_color_light">#FF6B88</color>
     
+    <!-- LeetCode Difficulty Colors (for layout references) -->
+    <color name="leetcode_easy">#00B8A3</color>
+    <color name="leetcode_medium">#FFA116</color>
+    <color name="leetcode_hard">#FF375F</color>
+    
     <!-- Contribution Colors (GitHub-like) -->
     <color name="contribution_level_0">#161B22</color>
     <color name="contribution_level_1">#0E4429</color>
