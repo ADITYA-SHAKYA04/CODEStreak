@@ -570,7 +570,10 @@ public class ModernMainActivity extends AppCompatActivity {
 
     private void setupBottomNavigation() {
         navHome.setOnClickListener(v -> selectNavItem(0));
-        navProgress.setOnClickListener(v -> selectNavItem(1));
+        navProgress.setOnClickListener(v -> {
+            selectNavItem(1);
+            startActivity(new Intent(ModernMainActivity.this, ProblemsActivity.class));
+        });
         navCards.setOnClickListener(v -> selectNavItem(2));
         navRevision.setOnClickListener(v -> selectNavItem(3));
         

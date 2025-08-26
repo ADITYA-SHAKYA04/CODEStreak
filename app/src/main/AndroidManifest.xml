@@ -36,6 +36,13 @@
             </intent-filter>
         </activity>
         
+        <!-- Problems Activity -->
+        <activity
+            android:name=".ProblemsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait">
+        </activity>
+        
     </application>
 
 </manifest>
