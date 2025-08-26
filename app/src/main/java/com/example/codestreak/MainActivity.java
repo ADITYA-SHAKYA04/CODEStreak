@@ -328,8 +328,8 @@ public class MainActivity extends AppCompatActivity {
             
             @Override
             public void onNothingSelected() {
-                // Hide popup when nothing is selected
-                hidePieChartPopup();
+                // Temporarily disabled to allow segments to show properly
+                // The popup dismiss listener will handle cleanup
             }
         });
         
@@ -765,6 +765,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
+    private float calculateSegmentAngle(PieEntry pieEntry, Highlight highlight) {
+        // Get the total of all values to calculate segment angles
+        float totalValue = easyProblems + mediumProblems + hardProblems;
+        
+        // Calculate cumulative angles for each segment
+        float easyAngle = (easyProblems / totalValue) * 360f;
+        float mediumAngle = (mediumProblems / totalValue) * 360f;
+        float hardAngle = (hardProblems / totalValue) * 360f;
+        
+        String label = pieEntry.getLabel();
+        float segmentAngle = 0f;
+        
+        // Calculate the middle angle of each segment
+        if ("Easy".equals(label)) {
+            segmentAngle = easyAngle / 2f; // Middle of Easy segment
+        } else if ("Medium".equals(label)) {
+            segmentAngle = easyAngle + (mediumAngle / 2f); // Middle of Medium segment
+        } else if ("Hard".equals(label)) {
+            segmentAngle = easyAngle + mediumAngle + (hardAngle / 2f); // Middle of Hard segment
+        }
+        
+        // Adjust for pie chart rotation (typically starts from top)
+        segmentAngle -= 90f; // MPAndroidChart starts from 3 o'clock, adjust to 12 o'clock
+        
+        return segmentAngle;
+    }
+    
     private void showPieChartPopup(PieEntry pieEntry, float percentage, Highlight highlight) {
         // Hide existing popups
         hideCalendarDayPopup();
@@ -804,16 +831,54 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout.LayoutParams.WRAP_CONTENT, 
             true);
         
-        // Set popup background and animation
-        pieChartPopup.setBackgroundDrawable(null);
-        pieChartPopup.setAnimationStyle(android.R.style.Animation_Dialog);
+        // Set popup background and enable outside touch
+        pieChartPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.popup_background, getTheme()));
+        pieChartPopup.setOutsideTouchable(true);
+        pieChartPopup.setFocusable(true);
+        pieChartPopup.setAnimationStyle(R.style.PopupAnimation); // Use custom smooth animation
         
-        // Show popup above the pie chart
+        // Add dismiss listener to clear pie chart highlight when popup is dismissed
+        pieChartPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                // Clear the pie chart selection to merge segment back into pie with smooth animation
+                if (pieChart != null) {
+                    pieChart.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            pieChart.highlightValues(null);
+                            // Add a subtle animation when segment merges back
+                            pieChart.animateY(200, com.github.mikephil.charting.animation.Easing.EaseInOutQuad);
+                        }
+                    }, 200); // Slightly longer delay to ensure smooth transition
+                }
+            }
+        });
+        
+        // Calculate position around the selected segment
         int[] location = new int[2];
         pieChart.getLocationOnScreen(location);
         
-        int popupX = location[0] + pieChart.getWidth() / 2 - 75; // Center horizontally
-        int popupY = location[1] - 120; // Show above the chart
+        // Get pie chart center
+        int centerX = location[0] + pieChart.getWidth() / 2;
+        int centerY = location[1] + pieChart.getHeight() / 2;
+        
+        // Calculate segment position based on highlight
+        float angle = calculateSegmentAngle(pieEntry, highlight);
+        int radius = Math.min(pieChart.getWidth(), pieChart.getHeight()) / 3; // Distance from center
+        
+        // Convert angle to radians and calculate position
+        double angleRad = Math.toRadians(angle);
+        int segmentX = centerX + (int) (radius * Math.cos(angleRad));
+        int segmentY = centerY + (int) (radius * Math.sin(angleRad));
+        
+        // Adjust popup position to be near the segment
+        int popupX = segmentX - 75; // Offset to center popup
+        int popupY = segmentY - 60; // Offset to show above segment
+        
+        // Ensure popup stays within screen bounds
+        popupX = Math.max(20, Math.min(popupX, getResources().getDisplayMetrics().widthPixels - 200));
+        popupY = Math.max(100, Math.min(popupY, getResources().getDisplayMetrics().heightPixels - 200));
         
         pieChartPopup.showAtLocation(pieChart, Gravity.NO_GRAVITY, popupX, popupY);
     }
@@ -823,6 +888,7 @@ public class MainActivity extends AppCompatActivity {
             pieChartPopup.dismiss();
             pieChartPopup = null;
         }
+        // Note: Highlight clearing is handled by the popup dismiss listener
     }
     
     private void showCalendarDayPopup(int dayNumber, int problemCount, View clickedView) {
@@ -855,9 +921,11 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout.LayoutParams.WRAP_CONTENT,
             true);
         
-        // Set popup background and animation
-        calendarDayPopup.setBackgroundDrawable(null);
-        calendarDayPopup.setAnimationStyle(android.R.style.Animation_Dialog);
+        // Set popup background and enable outside touch
+        calendarDayPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.popup_background, getTheme()));
+        calendarDayPopup.setOutsideTouchable(true);
+        calendarDayPopup.setFocusable(true);
+        calendarDayPopup.setAnimationStyle(R.style.PopupAnimation); // Use custom smooth animation
         
         // Show popup above the clicked view
         int[] location = new int[2];
