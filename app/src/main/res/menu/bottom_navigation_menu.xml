@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item
+        android:id="@+id/nav_dashboard"
+        android:title="Dashboard"
+        android:icon="@drawable/ic_home" />
+        
+    <item
+        android:id="@+id/nav_profile"
+        android:title="Profile"
+        android:icon="@drawable/ic_person" />
+        
+    <item
+        android:id="@+id/nav_stats"
+        android:title="Statistics"
+        android:icon="@drawable/ic_chart" />
+        
+    <item
+        android:id="@+id/nav_achievements"
+        android:title="Achievements" 
+        android:icon="@drawable/ic_trophy" />
+        
+    <item
+        android:id="@+id/nav_settings"
+        android:title="Settings"
+        android:icon="@drawable/ic_settings" />
+        
+</menu>

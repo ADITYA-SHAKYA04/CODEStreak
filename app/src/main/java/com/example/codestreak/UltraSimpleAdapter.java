@@ -76,38 +76,57 @@ public class UltraSimpleAdapter extends RecyclerView.Adapter<UltraSimpleAdapter.
         holder.dayNumber.setVisibility(View.VISIBLE);
         
         int level = getContributionLevel(problems);
+        int dayNumber = getDayNumberForPosition(position);
+        
+        // Check if this is the current day
+        boolean isCurrentDay = false;
+        if (currentCalendar != null && dayNumber > 0) {
+            Calendar today = Calendar.getInstance();
+            isCurrentDay = (today.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR) &&
+                           today.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
+                           today.get(Calendar.DAY_OF_MONTH) == dayNumber);
+        }
         
         // SUPER EXPLICIT COLOR APPLICATION - THIS WORKS!
         int color;
-        switch (level) {
-            case 0:
-                color = 0xFF161B22; // Dark gray
-                break;
-            case 1:
-                color = 0xFF0E4429; // Dark green
-                break;
-            case 2:
-                color = 0xFF006D32; // Medium green
-                break;
-            case 3:
-                color = 0xFF26A641; // Light green
-                break;
-            case 4:
-            default:
-                color = 0xFF39D353; // Bright green
-                break;
+        if (isCurrentDay) {
+            // Highlight current day with blue/accent color
+            color = 0xFF2196F3; // Blue for current day
+        } else {
+            switch (level) {
+                case 0:
+                    color = 0xFF161B22; // Dark gray
+                    break;
+                case 1:
+                    color = 0xFF0E4429; // Dark green
+                    break;
+                case 2:
+                    color = 0xFF006D32; // Medium green
+                    break;
+                case 3:
+                    color = 0xFF26A641; // Light green
+                    break;
+                case 4:
+                default:
+                    color = 0xFF39D353; // Bright green
+                    break;
+            }
         }
         
         holder.square.setBackgroundColor(color);
         
-        // Show day number or level for debugging
-        int dayNumber = getDayNumberForPosition(position);
+        // Show day number
         if (dayNumber > 0) {
             holder.dayNumber.setText(String.valueOf(dayNumber));
+            // Use contrasting text color for current day
+            if (isCurrentDay) {
+                holder.dayNumber.setTextColor(Color.WHITE);
+            } else {
+                holder.dayNumber.setTextColor(Color.WHITE);
+            }
         } else {
-            holder.dayNumber.setText(String.valueOf(level)); // Show level for debugging
+            holder.dayNumber.setText(""); // Clear text for empty cells
         }
-        holder.dayNumber.setTextColor(Color.WHITE);
         
         // Add click listener for squares with activity (level > 0)
         if (level > 0 && onDayClickListener != null && dayNumber > 0) {

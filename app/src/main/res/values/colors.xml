@@ -37,4 +37,64 @@
     <!-- Accent Colors -->
     <color name="leetcode_orange">#FFA116</color>
     <color name="leetcode_blue">#3B82F6</color>
+    
+    <!-- Modern Theme Colors -->
+    <!-- Light theme -->
+    <color name="modern_primary">#1976D2</color>
+    <color name="modern_primary_variant">#1565C0</color>
+    <color name="modern_secondary">#FFA726</color>
+    <color name="modern_background">#FAFAFA</color>
+    <color name="modern_surface">#FFFFFF</color>
+    <color name="modern_on_primary">#FFFFFF</color>
+    <color name="modern_on_secondary">#000000</color>
+    <color name="modern_on_background">#212121</color>
+    <color name="modern_on_surface">#212121</color>
+    
+    <!-- Dark theme -->
+    <color name="modern_primary_dark">#2196F3</color>
+    <color name="modern_primary_variant_dark">#1976D2</color>
+    <color name="modern_secondary_dark">#FFB74D</color>
+    <color name="modern_background_dark">#121212</color>
+    <color name="modern_surface_dark">#1E1E1E</color>
+    <color name="modern_on_primary_dark">#000000</color>
+    <color name="modern_on_secondary_dark">#000000</color>
+    <color name="modern_on_background_dark">#FFFFFF</color>
+    <color name="modern_on_surface_dark">#FFFFFF</color>
+    
+    <!-- Modern card colors -->
+    <color name="card_welcome_gradient_start">#667eea</color>
+    <color name="card_welcome_gradient_end">#764ba2</color>
+    <color name="card_stats_gradient_start">#f093fb</color>
+    <color name="card_stats_gradient_end">#f5576c</color>
+    <color name="card_goals_gradient_start">#4facfe</color>
+    <color name="card_goals_gradient_end">#00f2fe</color>
+    
+    <!-- Status colors -->
+    <color name="success_green">#4CAF50</color>
+    <color name="warning_yellow">#FF9800</color>
+    <color name="error_red">#F44336</color>
+    
+    <!-- Toggle colors -->
+    <color name="toggle_track_light">#E0E0E0</color>
+    <color name="toggle_track_dark">#424242</color>
+    <color name="toggle_thumb">#FFFFFF</color>
+    
+    <!-- Missing color references -->
+    <color name="nav_selected">#1976D2</color>
+    <color name="nav_unselected">#757575</color>
+    <color name="accent_primary">#1976D2</color>
+    <color name="accent_secondary">#FFA726</color>
+    <color name="background_primary">#FAFAFA</color>
+    <color name="background_secondary">#F5F5F5</color>
+    <color name="surface_primary">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="premium_gradient_start">#667eea</color>
+    <color name="premium_gradient_end">#764ba2</color>
+    
+    <!-- Theme-specific colors for dark mode -->
+    <color name="leetcode_dark_card">#262626</color>
+    <color name="leetcode_dark_card_light">#333333</color>
+    <color name="leetcode_text_light">#FFFFFF</color>
+    <color name="leetcode_text_dark">#212121</color>
 </resources>
