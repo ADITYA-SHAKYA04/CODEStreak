@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/customToggleButton"
+    android:layout_width="56dp"
+    android:layout_height="32dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:attr/selectableItemBackgroundBorderless">
+
+    <!-- Toggle Track Background -->
+    <View
+        android:id="@+id/toggleTrack"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/custom_toggle_track" />
+
+    <!-- Sun Icon (Light Mode - Left Side) -->
+    <ImageView
+        android:id="@+id/sunIcon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_gravity="center_vertical|start"
+        android:layout_marginStart="6dp"
+        android:src="@drawable/ic_sun"
+        android:alpha="0.6"
+        app:tint="@color/accent_secondary" />
+
+    <!-- Moon Icon (Dark Mode - Right Side) -->
+    <ImageView
+        android:id="@+id/moonIcon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginEnd="6dp"
+        android:src="@drawable/ic_moon"
+        android:alpha="0.6"
+        app:tint="@color/text_secondary" />
+
+    <!-- Toggle Thumb (moves with animation) -->
+    <FrameLayout
+        android:id="@+id/toggleThumbContainer"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="2dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="2dp">
+
+        <!-- Thumb Background -->
+        <View
+            android:id="@+id/toggleThumb"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/custom_toggle_thumb"
+            android:elevation="4dp" />
+
+        <!-- Active Icon inside thumb -->
+        <ImageView
+            android:id="@+id/toggleIcon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_sun"
+            app:tint="@color/accent_secondary" />
+
+    </FrameLayout>
+
+</FrameLayout>

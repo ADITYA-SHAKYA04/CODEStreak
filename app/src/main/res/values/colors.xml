@@ -87,6 +87,7 @@
     <color name="background_primary">#FAFAFA</color>
     <color name="background_secondary">#F5F5F5</color>
     <color name="surface_primary">#FFFFFF</color>
+    <color name="transparent">#00FFFFFF</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
     <color name="premium_gradient_start">#667eea</color>

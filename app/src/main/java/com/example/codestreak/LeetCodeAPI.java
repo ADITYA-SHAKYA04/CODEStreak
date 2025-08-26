@@ -189,6 +189,7 @@ public class LeetCodeAPI {
     public void getUserSubmissionStats(String username, LeetCodeCallback callback) {
         String query = "{\n" +
                 "  matchedUser(username: \"" + username + "\") {\n" +
+                "    username\n" +
                 "    submitStats {\n" +
                 "      acSubmissionNum {\n" +
                 "        difficulty\n" +

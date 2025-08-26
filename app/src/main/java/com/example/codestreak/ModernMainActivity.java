@@ -58,10 +58,11 @@ public class ModernMainActivity extends AppCompatActivity {
     private View homeIndicator, progressIndicator, cardsIndicator, revisionIndicator;
     private com.google.android.material.card.MaterialCardView bottomNavCard;
     private FrameLayout themeToggleContainer;
+    private View toggleTrack, toggleThumb;
+    private FrameLayout toggleThumbContainer;
+    private ImageView toggleIcon, sunIcon, moonIcon;
     private com.google.android.material.appbar.MaterialToolbar toolbar;
     private ImageButton menuButton;
-    private View toggleThumb;
-    private ImageView themeIcon, sunIcon, moonIcon;
     private TextView welcomeText;
     private TextView currentStreakText, longestStreakText;
     private TextView easyCountTableText, mediumCountTableText, hardCountTableText, totalCountText;
@@ -131,12 +132,17 @@ public class ModernMainActivity extends AppCompatActivity {
         initializeCustomBottomNavigation();
         bottomNavCard = findViewById(R.id.bottomNavCard);
         themeToggleContainer = findViewById(R.id.themeToggleContainer);
-        toolbar = findViewById(R.id.toolbar);
-        menuButton = findViewById(R.id.menuButton);
+        
+        // Initialize custom toggle components
+        toggleTrack = findViewById(R.id.toggleTrack);
         toggleThumb = findViewById(R.id.toggleThumb);
-        themeIcon = findViewById(R.id.themeIcon);
+        toggleThumbContainer = findViewById(R.id.toggleThumbContainer);
+        toggleIcon = findViewById(R.id.toggleIcon);
         sunIcon = findViewById(R.id.sunIcon);
         moonIcon = findViewById(R.id.moonIcon);
+        
+        toolbar = findViewById(R.id.toolbar);
+        menuButton = findViewById(R.id.menuButton);
         welcomeText = findViewById(R.id.welcomeText);
         currentStreakText = findViewById(R.id.currentStreakText);
         longestStreakText = findViewById(R.id.longestStreakText);
@@ -156,12 +162,21 @@ public class ModernMainActivity extends AppCompatActivity {
         
         // Setup menu button
         ImageButton menuButton = findViewById(R.id.menuButton);
-        menuButton.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+        FrameLayout menuButtonContainer = (FrameLayout) menuButton.getParent();
+        
+        // Set click listeners on both button and container for better UX
+        View.OnClickListener menuClickListener = v -> drawerLayout.openDrawer(GravityCompat.START);
+        menuButton.setOnClickListener(menuClickListener);
+        menuButtonContainer.setOnClickListener(menuClickListener);
     }
     
     private void setupThemeToggle() {
         themeToggleContainer.setOnClickListener(v -> toggleTheme());
-        updateThemeToggleAppearance(false);
+        
+        // Post a runnable to ensure layout is complete before setting initial position
+        themeToggleContainer.post(() -> {
+            updateThemeToggleAppearance(false);
+        });
     }
     
     private void toggleTheme() {
@@ -177,82 +192,40 @@ public class ModernMainActivity extends AppCompatActivity {
     }
     
     private void updateThemeToggleAppearance(boolean animate) {
-        // Calculate complete slide positions
-        // Light mode: thumb on left (2dp), Dark mode: thumb on right (26dp)
-        float lightModeThumbX = 2f;
-        float darkModeThumbX = 26f;
+        // Set track state for proper background color
+        toggleTrack.setSelected(isDarkTheme);
         
-        // Active icon positions (centered on thumb)
-        float lightModeIconX = 6f;  // 2 + 4dp margin for centering
-        float darkModeIconX = 30f;  // 26 + 4dp margin for centering
+        // Simple positioning: Light mode = 0dp, Dark mode = 24dp translation
+        // This moves the thumb from left edge to right edge within the 56dp container
+        float targetX = isDarkTheme ? 60f : 0f;
         
-        float targetThumbX = isDarkTheme ? darkModeThumbX : lightModeThumbX;
-        float targetIconX = isDarkTheme ? darkModeIconX : lightModeIconX;
+        System.out.println("DEBUG: Toggle positioning - isDarkTheme: " + isDarkTheme + ", targetX: " + targetX + "dp");
         
         if (animate) {
-            // Get current positions
-            float currentThumbX = toggleThumb.getTranslationX();
-            float currentIconX = themeIcon.getTranslationX();
-            
-            // Animate thumb sliding completely across
-            ValueAnimator thumbAnimator = ValueAnimator.ofFloat(currentThumbX, targetThumbX);
+            // Animate thumb sliding
+            ValueAnimator thumbAnimator = ValueAnimator.ofFloat(toggleThumbContainer.getTranslationX(), targetX);
             thumbAnimator.setDuration(300);
             thumbAnimator.setInterpolator(new DecelerateInterpolator());
             thumbAnimator.addUpdateListener(animation -> {
                 float value = (Float) animation.getAnimatedValue();
-                toggleThumb.setTranslationX(value);
+                toggleThumbContainer.setTranslationX(value);
+                System.out.println("DEBUG: Animation value: " + value + "dp");
             });
             thumbAnimator.start();
             
-            // Animate active icon moving with thumb
-            ValueAnimator iconMoveAnimator = ValueAnimator.ofFloat(currentIconX, targetIconX);
-            iconMoveAnimator.setDuration(300);
-            iconMoveAnimator.setInterpolator(new DecelerateInterpolator());
-            iconMoveAnimator.addUpdateListener(animation -> {
-                float value = (Float) animation.getAnimatedValue();
-                themeIcon.setTranslationX(value);
-            });
-            iconMoveAnimator.start();
-            
-            // Animate track background color
-            int currentColor = isDarkTheme ? 
-                getResources().getColor(R.color.toggle_track_light, getTheme()) :
-                getResources().getColor(R.color.toggle_track_dark, getTheme());
-            int targetColor = isDarkTheme ? 
-                getResources().getColor(R.color.toggle_track_dark, getTheme()) :
-                getResources().getColor(R.color.toggle_track_light, getTheme());
-                
-            ValueAnimator colorAnimator = ValueAnimator.ofArgb(currentColor, targetColor);
-            colorAnimator.setDuration(300);
-            colorAnimator.addUpdateListener(animation -> {
-                int color = (Integer) animation.getAnimatedValue();
-                themeToggleContainer.setBackgroundColor(color);
-            });
-            colorAnimator.start();
-            
-            // Animate background icons visibility
-            if (isDarkTheme) {
-                // Switching to dark mode - highlight moon, dim sun
-                sunIcon.animate().alpha(0.3f).setDuration(200);
-                moonIcon.animate().alpha(1.0f).setDuration(200);
-            } else {
-                // Switching to light mode - highlight sun, dim moon
-                sunIcon.animate().alpha(1.0f).setDuration(200);
-                moonIcon.animate().alpha(0.3f).setDuration(200);
-            }
-            
-            // Animate active icon change with scale effect
-            themeIcon.animate()
-                .scaleX(0.8f)
-                .scaleY(0.8f)
+            // Animate icon change with scale effect
+            toggleIcon.animate()
+                .scaleX(0.7f)
+                .scaleY(0.7f)
                 .setDuration(150)
                 .withEndAction(() -> {
                     // Change icon
-                    themeIcon.setImageResource(isDarkTheme ? R.drawable.ic_moon : R.drawable.ic_sun);
-                    themeIcon.setColorFilter(android.graphics.Color.WHITE);
+                    toggleIcon.setImageResource(isDarkTheme ? R.drawable.ic_moon : R.drawable.ic_sun);
+                    toggleIcon.setColorFilter(isDarkTheme ? 
+                        getColor(R.color.text_secondary) : getColor(R.color.accent_secondary));
                     
                     // Scale back up
-                    themeIcon.animate()
+                    toggleIcon.animate()
                         .scaleX(1f)
                         .scaleY(1f)
                         .setDuration(150)
@@ -260,27 +233,27 @@ public class ModernMainActivity extends AppCompatActivity {
                 })
                 .start();
                 
+            // Animate background icons
+            if (isDarkTheme) {
+                sunIcon.animate().alpha(0.3f).setDuration(200);
+                moonIcon.animate().alpha(1.0f).setDuration(200);
+            } else {
+                sunIcon.animate().alpha(1.0f).setDuration(200);
+                moonIcon.animate().alpha(0.3f).setDuration(200);
+            }
+            
         } else {
             // Set positions immediately without animation
-            toggleThumb.setTranslationX(targetThumbX);
-            themeIcon.setTranslationX(targetIconX);
-            themeIcon.setImageResource(isDarkTheme ? R.drawable.ic_moon : R.drawable.ic_sun);
-            themeIcon.setColorFilter(android.graphics.Color.WHITE);
-            
-            // Set track color
-            int trackColor = isDarkTheme ? 
-                getResources().getColor(R.color.toggle_track_dark, getTheme()) :
-                getResources().getColor(R.color.toggle_track_light, getTheme());
-            themeToggleContainer.setBackgroundColor(trackColor);
+            toggleThumbContainer.setTranslationX(targetX);
+            toggleIcon.setImageResource(isDarkTheme ? R.drawable.ic_moon : R.drawable.ic_sun);
+            toggleIcon.setColorFilter(isDarkTheme ? 
+                getColor(R.color.text_secondary) : getColor(R.color.accent_secondary));
             
             // Set background icons visibility
-            if (isDarkTheme) {
-                sunIcon.setAlpha(0.3f);
-                moonIcon.setAlpha(1.0f);
-            } else {
-                sunIcon.setAlpha(1.0f);
-                moonIcon.setAlpha(0.3f);
-            }
+            sunIcon.setAlpha(isDarkTheme ? 0.3f : 1.0f);
+            moonIcon.setAlpha(isDarkTheme ? 1.0f : 0.3f);
+            
+            System.out.println("DEBUG: Set immediate position to: " + targetX + "dp");
         }
     }
     
@@ -311,7 +284,7 @@ public class ModernMainActivity extends AppCompatActivity {
             drawerLayout.setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
             
             // Update all major UI elements with dark backgrounds
-            findViewById(R.id.appBarLayout).setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
+            findViewById(R.id.appBarLayout).setBackgroundColor(android.graphics.Color.TRANSPARENT);
             findViewById(R.id.navigationView).setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
             
             // Update floating bottom navigation card for dark theme
@@ -319,17 +292,22 @@ public class ModernMainActivity extends AppCompatActivity {
                 bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.leetcode_card_bg, getTheme()));
             }
             
-            // Update toolbar background for dark theme
+            // Update toolbar background for dark theme - keep transparent
             if (toolbar != null) {
-                toolbar.setBackgroundColor(getResources().getColor(R.color.leetcode_card_bg, getTheme()));
+                toolbar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             }
             
             // Update toolbar icon colors for dark theme
             if (menuButton != null) {
                 menuButton.setColorFilter(getResources().getColor(R.color.leetcode_text_primary, getTheme()));
+                // Force update the menu button container background for dark theme
+                FrameLayout menuButtonContainer = (FrameLayout) menuButton.getParent();
+                if (menuButtonContainer != null) {
+                    menuButtonContainer.setBackgroundResource(R.drawable.menu_button_selector_dark);
+                }
             }
-            if (themeIcon != null) {
-                themeIcon.setColorFilter(getResources().getColor(R.color.leetcode_text_primary, getTheme()));
+            if (toggleIcon != null) {
+                toggleIcon.setColorFilter(getResources().getColor(R.color.leetcode_text_primary, getTheme()));
             }
             
             // This is the key fix - update the main CoordinatorLayout background
@@ -410,7 +388,7 @@ public class ModernMainActivity extends AppCompatActivity {
             drawerLayout.setBackgroundColor(getResources().getColor(R.color.modern_background, getTheme()));
             
             // Update all major UI elements with light backgrounds
-            findViewById(R.id.appBarLayout).setBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
+            findViewById(R.id.appBarLayout).setBackgroundColor(android.graphics.Color.TRANSPARENT);
             findViewById(R.id.navigationView).setBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
             
             // Update floating bottom navigation card for light theme
@@ -418,17 +396,22 @@ public class ModernMainActivity extends AppCompatActivity {
                 bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
             }
             
-            // Update toolbar background for light theme
+            // Update toolbar background for light theme - keep transparent
             if (toolbar != null) {
-                toolbar.setBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
+                toolbar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             }
             
             // Update toolbar icon colors for light theme
             if (menuButton != null) {
                 menuButton.setColorFilter(getResources().getColor(R.color.text_primary, getTheme()));
+                // Force update the menu button container background for light theme
+                FrameLayout menuButtonContainer = (FrameLayout) menuButton.getParent();
+                if (menuButtonContainer != null) {
+                    menuButtonContainer.setBackgroundResource(R.drawable.menu_button_selector_light);
+                }
             }
-            if (themeIcon != null) {
-                themeIcon.setColorFilter(getResources().getColor(R.color.text_primary, getTheme()));
+            if (toggleIcon != null) {
+                toggleIcon.setColorFilter(getResources().getColor(R.color.text_primary, getTheme()));
             }
             
             // This is the key fix - update the main CoordinatorLayout background
@@ -1104,9 +1087,14 @@ public class ModernMainActivity extends AppCompatActivity {
         // Get the user's LeetCode username 
         String username = "adityashak04"; // Default username
         
+        System.out.println("DEBUG: Fetching LeetCode data for username: " + username);
+        
         leetCodeAPI.getUserSubmissionStats(username, new LeetCodeAPI.LeetCodeCallback() {
             @Override
             public void onSuccess(String response) {
+                System.out.println("DEBUG: LeetCode API Success! Response length: " + response.length());
+                System.out.println("DEBUG: Response preview: " + response.substring(0, Math.min(300, response.length())) + "...");
+                
                 // Move heavy data processing to background thread
                 new Thread(new Runnable() {
                     @Override
@@ -1118,19 +1106,20 @@ public class ModernMainActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    updateStats();
+                                    updateStats(); // This will now show the real LeetCode username
                                     updatePieChart();
                                     updateContributionGrid();
                                 }
                             });
                         } catch (Exception e) {
+                            System.err.println("DEBUG: Error parsing LeetCode data: " + e.getMessage());
+                            e.printStackTrace();
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     updateContributionGrid();
                                 }
                             });
-                            e.printStackTrace();
                         }
                     }
                 }).start();
@@ -1138,6 +1127,8 @@ public class ModernMainActivity extends AppCompatActivity {
             
             @Override
             public void onError(Exception error) {
+                System.err.println("DEBUG: LeetCode API Error: " + error.getMessage());
+                error.printStackTrace();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -1150,6 +1141,8 @@ public class ModernMainActivity extends AppCompatActivity {
     }
     
     private void parseAndUpdateData(String jsonResponse) throws Exception {
+        System.out.println("DEBUG: Starting to parse LeetCode response...");
+        
         // Clear cache for fresh data
         monthsWithDataCache = null;
         
@@ -1157,9 +1150,33 @@ public class ModernMainActivity extends AppCompatActivity {
         org.json.JSONObject data = response.getJSONObject("data");
         org.json.JSONObject matchedUser = data.getJSONObject("matchedUser");
         
+        // Extract and save the real LeetCode username
+        String realUsername = matchedUser.getString("username");
+        System.out.println("DEBUG: Found LeetCode username: " + realUsername);
+        
+        SharedPreferences sharedPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("leetcode_username", realUsername);
+        editor.apply();
+        System.out.println("DEBUG: Saved username to SharedPreferences");
+        
+        // Update welcome text immediately with the real username
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (welcomeText != null) {
+                    welcomeText.setText("Hi " + realUsername);
+                    System.out.println("DEBUG: Updated welcome text to: Hi " + realUsername);
+                } else {
+                    System.err.println("DEBUG: welcomeText is null!");
+                }
+            }
+        });
+        
         // Parse submissionCalendar
         String submissionCalendarString = matchedUser.getString("submissionCalendar");
         submissionCalendarData = new org.json.JSONObject(submissionCalendarString);
+        System.out.println("DEBUG: Parsed submission calendar with " + submissionCalendarData.length() + " entries");
         
         // Parse problem counts
         org.json.JSONObject submitStats = matchedUser.getJSONObject("submitStats");
@@ -1172,6 +1189,8 @@ public class ModernMainActivity extends AppCompatActivity {
             String difficulty = submission.getString("difficulty");
             int count = submission.getInt("count");
             
+            System.out.println("DEBUG: Found " + count + " " + difficulty + " problems");
+            
             if ("Easy".equals(difficulty)) {
                 newEasy = count;
             } else if ("Medium".equals(difficulty)) {
@@ -1181,11 +1200,16 @@ public class ModernMainActivity extends AppCompatActivity {
             }
         }
         
+        System.out.println("DEBUG: Final counts - Easy: " + newEasy + ", Medium: " + newMedium + ", Hard: " + newHard);
+        
         // Update stats if we got valid data
         if (newEasy > 0 || newMedium > 0 || newHard > 0) {
             easyProblems = newEasy;
             mediumProblems = newMedium;
             hardProblems = newHard;
+            System.out.println("DEBUG: Updated problem counts with real data");
+        } else {
+            System.out.println("DEBUG: No valid problem counts found, keeping default values");
         }
         
         // Navigate to current month or first month with data
@@ -1217,9 +1241,19 @@ public class ModernMainActivity extends AppCompatActivity {
         hardCountTableText.setText(String.valueOf(hardProblems));
         totalCountText.setText(String.valueOf(easyProblems + mediumProblems + hardProblems));
         
-        // Get username from SharedPreferences
+        // Get LeetCode username from SharedPreferences, fallback to regular username if not available
         SharedPreferences sharedPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
-        String username = sharedPref.getString("username", "Champ");
+        String leetcodeUsername = sharedPref.getString("leetcode_username", null);
+        String username;
+        
+        if (leetcodeUsername != null && !leetcodeUsername.isEmpty()) {
+            // Use the real LeetCode username
+            username = leetcodeUsername;
+        } else {
+            // Fallback to regular username or default
+            username = sharedPref.getString("username", "Champ");
+        }
+        
         welcomeText.setText("Hi " + username);
     }
     
