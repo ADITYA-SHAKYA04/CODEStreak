@@ -47,11 +47,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class ModernMainActivity extends AppCompatActivity {
+public class ModernMainActivity extends BaseActivity {
     
-    // UI Components
-    private DrawerLayout drawerLayout;
-    private NavigationView navigationView;
+    // UI Components  
     private LinearLayout navHome, navProgress, navCards, navRevision;
     private ImageView homeIcon, progressIcon, cardsIcon, revisionIcon;
     private TextView homeText, progressText, cardsText, revisionText;
@@ -76,7 +74,7 @@ public class ModernMainActivity extends AppCompatActivity {
     private ImageButton prevMonthButton, nextMonthButton;
     
     // Data
-    private boolean isDarkTheme = true;
+
     private int easyProblems = 45;
     private int mediumProblems = 71;
     private int hardProblems = 11;
@@ -96,27 +94,25 @@ public class ModernMainActivity extends AppCompatActivity {
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Load theme preference before calling super.onCreate()
-        loadThemePreference();
-        
-        // Apply theme before setting content view
-        if (isDarkTheme) {
-            setTheme(androidx.appcompat.R.style.Theme_AppCompat_NoActionBar);
-        } else {
-            setTheme(androidx.appcompat.R.style.Theme_AppCompat_Light_NoActionBar);
-        }
-        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_modern);
         
         // Initialize views and setup
         initializeViews();
         setupThemeToggle();
-        setupNavigationDrawer();
         setupBottomNavigation();
         setupPieChart();
         setupCalendar();
         setupDailyGoals();
+        
+        // Check if theme settings should be shown
+        if (getIntent().getBooleanExtra("show_theme_settings", false)) {
+            // Scroll to or highlight theme toggle
+            if (themeToggleContainer != null) {
+                themeToggleContainer.requestFocus();
+                // You could also show a toast or animate the theme toggle
+            }
+        }
         
         // Load user preferences
         loadUserPreferences();
@@ -516,30 +512,6 @@ public class ModernMainActivity extends AppCompatActivity {
                 updateSectionTitleColors(group.getChildAt(i), color);
             }
         }
-    }
-    
-    private void loadThemePreference() {
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        isDarkTheme = prefs.getBoolean("dark_theme", false); // Default to light theme
-    }
-    
-    private void setupNavigationDrawer() {
-        navigationView.setNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-            
-            if (id == R.id.nav_profile) {
-                // Handle profile
-            } else if (id == R.id.nav_stats) {
-                // Handle statistics
-            } else if (id == R.id.nav_achievements) {
-                // Handle achievements
-            } else if (id == R.id.nav_settings) {
-                // Handle settings
-            }
-            
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
-        });
     }
     
     private void initializeCustomBottomNavigation() {
@@ -1207,8 +1179,8 @@ public class ModernMainActivity extends AppCompatActivity {
     }
     
     private void saveThemePreference() {
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        prefs.edit().putBoolean("dark_theme", isDarkTheme).apply();
+        // Call the parent method to ensure consistent saving
+        super.saveThemePreference(isDarkTheme);
     }
     
     private void fetchInitialData() {

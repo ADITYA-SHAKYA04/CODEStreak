@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/background_primary"
+    android:padding="16dp">
+
+    <!-- Dialog Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sort &amp; Filter Options"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Difficulty Filter Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Filter by Difficulty"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <CheckBox
+            android:id="@+id/easyCheckBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Easy"
+            android:textColor="@color/text_primary" />
+
+        <CheckBox
+            android:id="@+id/mediumCheckBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Medium"
+            android:textColor="@color/text_primary" />
+
+        <CheckBox
+            android:id="@+id/hardCheckBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Hard"
+            android:textColor="@color/text_primary" />
+
+    </LinearLayout>
+
+    <!-- Sort Order Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sort Order"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/sortOrderRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp">
+
+        <RadioButton
+            android:id="@+id/defaultSortRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Default (Problem ID)"
+            android:textColor="@color/text_primary"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/easyToHardRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Easy to Hard"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/hardToEasyRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hard to Easy"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/aTozRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Alphabetical (A-Z)"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/zToARadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Alphabetical (Z-A)"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/acceptanceAscRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Acceptance Rate (Low to High)"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/acceptanceDescRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Acceptance Rate (High to Low)"
+            android:textColor="@color/text_primary" />
+
+    </RadioGroup>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/clearSortButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear All"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/cancelSortButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/applySortButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Apply"
+            android:textColor="@color/accent_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+    </LinearLayout>
+
+</LinearLayout>
