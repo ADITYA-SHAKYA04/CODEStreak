@@ -63,6 +63,7 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/goalDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="26th August"
@@ -87,11 +88,11 @@
             android:id="@+id/difficultyBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Easy"
+            android:text=""
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:background="@drawable/difficulty_badge_easy"
+            android:background="@drawable/calendar_date_empty"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
             android:layout_marginStart="12dp" />

@@ -1,6 +1,7 @@
 package com.example.codestreak;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
@@ -29,12 +30,11 @@ public class ProblemsActivity extends BaseActivity {
     
     private RecyclerView problemsRecyclerView;
     private EditText searchEditText;
-    private ChipGroup topicsChipGroup;
     private TextView problemCountText;
     private TextView selectedTopicsText;
     private LinearLayout filterTopicsButton;
-    private LinearLayout sortButton;
-    private TextView sortText;
+    private TextView sortButton; // Changed from LinearLayout to TextView
+    private TextView sortText; // Can be removed as we're using sortButton for both
     
     private ProblemsAdapter problemsAdapter;
     
@@ -56,29 +56,35 @@ public class ProblemsActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_problems_with_nav);
+        setContentView(R.layout.activity_problems);
         
         initViews();
         setupRecyclerViews();
         loadData();
         setupSearch();
+        setupBottomNavigation();
     }
     
     private void initViews() {
         problemsRecyclerView = findViewById(R.id.problemsRecyclerView);
         searchEditText = findViewById(R.id.searchEditText);
-        topicsChipGroup = findViewById(R.id.topicsChipGroup);
         problemCountText = findViewById(R.id.problemCountText);
         selectedTopicsText = findViewById(R.id.selectedTopicsText);
         filterTopicsButton = findViewById(R.id.filterTopicsButton);
         sortButton = findViewById(R.id.sortButton);
-        sortText = findViewById(R.id.sortText);
+        sortText = sortButton; // Use the same TextView for both
         
         // Setup filter topics button
         filterTopicsButton.setOnClickListener(v -> showTopicSelectionDialog());
         
         // Setup sort button
         sortButton.setOnClickListener(v -> showSortDialog());
+        
+        // Setup back button
+        ImageView backButton = findViewById(R.id.backButton);
+        backButton.setOnClickListener(v -> {
+            finish(); // Go back to previous activity
+        });
     }
     
     private void setupRecyclerViews() {
@@ -940,5 +946,45 @@ public class ProblemsActivity extends BaseActivity {
         interface OnTopicToggleListener {
             void onTopicToggled(Topic topic, boolean isSelected);
         }
+    }
+    
+    private void setupBottomNavigation() {
+        // Get navigation elements
+        LinearLayout navHome = findViewById(R.id.nav_home);
+        LinearLayout navProgress = findViewById(R.id.nav_progress);
+        LinearLayout navCards = findViewById(R.id.nav_cards);
+        LinearLayout navRevision = findViewById(R.id.nav_revision);
+        
+        // Get indicators and set current active (Problems)
+        View homeIndicator = findViewById(R.id.home_indicator);
+        View progressIndicator = findViewById(R.id.progress_indicator);
+        View cardsIndicator = findViewById(R.id.cards_indicator);
+        View revisionIndicator = findViewById(R.id.revision_indicator);
+        
+        // Set Problems as active
+        progressIndicator.setVisibility(View.VISIBLE);
+        TextView progressText = findViewById(R.id.progress_text);
+        progressText.setTextColor(getResources().getColor(R.color.accent_secondary, getTheme()));
+        progressText.setTypeface(null, android.graphics.Typeface.BOLD);
+        
+        // Set click listeners
+        navHome.setOnClickListener(v -> {
+            Intent intent = new Intent(ProblemsActivity.this, ModernMainActivity.class);
+            startActivity(intent);
+            finish();
+        });
+        
+        navProgress.setOnClickListener(v -> {
+            // Already on Problems page - do nothing or scroll to top
+            problemsRecyclerView.smoothScrollToPosition(0);
+        });
+        
+        navCards.setOnClickListener(v -> {
+            // TODO: Navigate to Cards activity when created
+        });
+        
+        navRevision.setOnClickListener(v -> {
+            // TODO: Navigate to Revision activity when created
+        });
     }
 }

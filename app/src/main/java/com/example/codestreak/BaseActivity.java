@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -28,18 +29,21 @@ public abstract class BaseActivity extends AppCompatActivity {
         // Load theme preference before calling super.onCreate()
         loadThemePreference();
         
-        // Apply theme before setting content view
+        // Apply theme using AppCompatDelegate for proper Material3 theming
         applyTheme();
         
         super.onCreate(savedInstanceState);
     }
     
     private void applyTheme() {
+        // Use AppCompatDelegate to properly handle day/night theme switching
         if (isDarkTheme) {
-            setTheme(androidx.appcompat.R.style.Theme_AppCompat_NoActionBar);
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         } else {
-            setTheme(androidx.appcompat.R.style.Theme_AppCompat_Light_NoActionBar);
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
+        // Set our custom Material3 theme
+        setTheme(R.style.Theme_CodeStreak);
     }
     
     @Override
@@ -139,6 +143,13 @@ public abstract class BaseActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         prefs.edit().putBoolean("dark_theme", darkTheme).apply();
         this.isDarkTheme = darkTheme;
+        
+        // Apply the theme change immediately using AppCompatDelegate
+        if (darkTheme) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
     }
     
     @Override

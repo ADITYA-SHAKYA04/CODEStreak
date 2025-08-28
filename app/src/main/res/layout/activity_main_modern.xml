@@ -33,8 +33,8 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="horizontal"
                     android:gravity="center_vertical"
+                    android:orientation="horizontal"
                     android:paddingHorizontal="16dp">
 
                     <!-- Menu Button Container -->
@@ -42,20 +42,20 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:background="@drawable/menu_button_selector"
-                        android:elevation="4dp"
-                        android:translationZ="2dp"
                         android:clickable="true"
-                        android:focusable="true">
-                        
+                        android:elevation="4dp"
+                        android:focusable="true"
+                        android:translationZ="2dp">
+
                         <ImageButton
                             android:id="@+id/menuButton"
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:layout_gravity="center"
                             android:background="@android:color/transparent"
-                            android:src="@drawable/ic_menu"
                             android:contentDescription="Menu"
                             android:scaleType="centerInside"
+                            android:src="@drawable/ic_menu"
                             app:tint="@color/text_primary" />
                     </FrameLayout>
 
@@ -63,19 +63,19 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="16dp"
                         android:layout_weight="1"
-                        android:orientation="vertical"
                         android:gravity="center"
-                        android:layout_marginHorizontal="16dp">
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:letterSpacing="0.1"
                             android:text="CODESTREAK"
                             android:textColor="@color/accent_secondary"
                             android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.1" />
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/welcomeText"
@@ -89,24 +89,33 @@
 
                     <!-- Theme Toggle Button -->
                     <!-- Custom Theme Toggle -->
-                    <include 
+                    <include
                         android:id="@+id/themeToggleContainer"
                         layout="@layout/custom_toggle_switch"
                         android:layout_width="56dp"
                         android:layout_height="32dp"
-                        android:layout_gravity="center_vertical" />                </LinearLayout>
+                        android:layout_gravity="center_vertical" />
+                </LinearLayout>
 
             </com.google.android.material.appbar.MaterialToolbar>
 
         </com.google.android.material.appbar.AppBarLayout>
 
-        <!-- Main Content with NestedScrollView -->
-        <androidx.core.widget.NestedScrollView
+        <!-- Pull to Refresh Layout -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingBottom="110dp"
-            android:clipToPadding="false"
+            android:elevation="4dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <!-- Main Content with NestedScrollView -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/nestedScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="110dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -125,8 +134,8 @@
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
                         app:cardBackgroundColor="@color/surface_primary"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="2dp">
@@ -134,9 +143,9 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:gravity="center"
                             android:orientation="vertical"
-                            android:padding="5dp"
-                            android:gravity="center">
+                            android:padding="5dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -168,8 +177,8 @@
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginStart="8dp"
+                        android:layout_weight="1"
                         app:cardBackgroundColor="@color/surface_primary"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="2dp">
@@ -177,9 +186,9 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:gravity="center"
                             android:orientation="vertical"
-                            android:padding="5dp"
-                            android:gravity="center">
+                            android:padding="5dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -195,7 +204,7 @@
                                 android:text="7"
                                 android:textColor="@color/text_primary"
                                 android:textSize="32sp"
-                                android:textStyle="bold"/>
+                                android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -227,11 +236,12 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
+                            android:layout_marginBottom="16dp"
                             android:gravity="center_vertical"
-                            android:layout_marginBottom="16dp">
+                            android:orientation="horizontal">
 
                             <TextView
+                                android:id="@+id/todaysGoalTitle"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
@@ -245,11 +255,11 @@
                                 android:layout_width="32dp"
                                 android:layout_height="32dp"
                                 android:background="@drawable/custom_toggle_track"
+                                android:gravity="center"
                                 android:text="6"
                                 android:textColor="@color/leetcode_card_bg"
                                 android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:gravity="center" />
+                                android:textStyle="bold" />
 
                         </LinearLayout>
 
@@ -281,20 +291,20 @@
                         android:padding="5dp">
 
                         <TextView
-                            android:layout_gravity="center_horizontal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginBottom="5dp"
                             android:text="Problem Distribution"
                             android:textColor="@color/text_primary"
                             android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="5dp" />
+                            android:textStyle="bold" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
                             <com.github.mikephil.charting.charts.PieChart
                                 android:id="@+id/pieChart"
@@ -314,18 +324,18 @@
                                     android:id="@+id/statsTableContainer"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:orientation="vertical"
                                     android:background="@drawable/stats_table_background"
+                                    android:orientation="vertical"
                                     android:padding="12dp">
 
                                     <!-- Easy row -->
                                     <LinearLayout
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
                                         android:gravity="center_vertical"
+                                        android:orientation="horizontal"
                                         android:paddingVertical="4dp">
-                                        
+
                                         <TextView
                                             android:layout_width="0dp"
                                             android:layout_height="wrap_content"
@@ -334,7 +344,7 @@
                                             android:textColor="@color/easy_color"
                                             android:textSize="14sp"
                                             android:textStyle="bold" />
-                                        
+
                                         <TextView
                                             android:id="@+id/easyCountTableText"
                                             android:layout_width="wrap_content"
@@ -349,10 +359,10 @@
                                     <LinearLayout
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
                                         android:gravity="center_vertical"
+                                        android:orientation="horizontal"
                                         android:paddingVertical="4dp">
-                                        
+
                                         <TextView
                                             android:layout_width="0dp"
                                             android:layout_height="wrap_content"
@@ -361,7 +371,7 @@
                                             android:textColor="@color/medium_color"
                                             android:textSize="14sp"
                                             android:textStyle="bold" />
-                                        
+
                                         <TextView
                                             android:id="@+id/mediumCountTableText"
                                             android:layout_width="wrap_content"
@@ -376,10 +386,10 @@
                                     <LinearLayout
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
                                         android:gravity="center_vertical"
+                                        android:orientation="horizontal"
                                         android:paddingVertical="4dp">
-                                        
+
                                         <TextView
                                             android:layout_width="0dp"
                                             android:layout_height="wrap_content"
@@ -388,7 +398,7 @@
                                             android:textColor="@color/hard_color"
                                             android:textSize="14sp"
                                             android:textStyle="bold" />
-                                        
+
                                         <TextView
                                             android:id="@+id/hardCountTableText"
                                             android:layout_width="wrap_content"
@@ -403,18 +413,18 @@
                                     <View
                                         android:layout_width="match_parent"
                                         android:layout_height="1dp"
-                                        android:background="@color/text_secondary"
                                         android:layout_marginVertical="8dp"
-                                        android:alpha="0.3" />
+                                        android:alpha="0.3"
+                                        android:background="@color/text_secondary" />
 
                                     <!-- Total row -->
                                     <LinearLayout
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
                                         android:gravity="center_vertical"
+                                        android:orientation="horizontal"
                                         android:paddingVertical="4dp">
-                                        
+
                                         <TextView
                                             android:layout_width="0dp"
                                             android:layout_height="wrap_content"
@@ -423,7 +433,7 @@
                                             android:textColor="@color/text_primary"
                                             android:textSize="16sp"
                                             android:textStyle="bold" />
-                                        
+
                                         <TextView
                                             android:id="@+id/totalCountText"
                                             android:layout_width="wrap_content"
@@ -460,9 +470,9 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
+                            android:layout_marginBottom="16dp"
                             android:gravity="center_vertical"
-                            android:layout_marginBottom="16dp">
+                            android:orientation="horizontal">
 
                             <ImageButton
                                 android:id="@+id/prevMonthButton"
@@ -506,35 +516,30 @@
 
         </androidx.core.widget.NestedScrollView>
 
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
         <!-- Modern Floating Bottom Navigation -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bottomNavCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:orientation="vertical">
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            app:cardBackgroundColor="@color/surface_primary"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="16dp"
+            app:cardMaxElevation="16dp"
+            android:visibility="visible">
 
-            <!-- Floating Container -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/bottomNavCard"
+            <include
+                android:id="@+id/customBottomNavigation"
+                layout="@layout/custom_bottom_navigation"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="@color/surface_primary"
-                app:cardCornerRadius="28dp"
-                app:cardElevation="16dp"
-                app:cardMaxElevation="16dp">
+                android:layout_height="wrap_content" />
 
-                <include 
-                    android:id="@+id/customBottomNavigation"
-                    layout="@layout/custom_bottom_navigation"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

@@ -31,6 +31,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.Entry;
@@ -50,6 +51,7 @@ import java.util.List;
 public class ModernMainActivity extends BaseActivity {
     
     // UI Components  
+    private SwipeRefreshLayout swipeRefreshLayout;
     private LinearLayout navHome, navProgress, navCards, navRevision;
     private ImageView homeIcon, progressIcon, cardsIcon, revisionIcon;
     private TextView homeText, progressText, cardsText, revisionText;
@@ -65,6 +67,7 @@ public class ModernMainActivity extends BaseActivity {
     private TextView currentStreakText, longestStreakText;
     private TextView easyCountTableText, mediumCountTableText, hardCountTableText, totalCountText;
     private TextView goalCountBadge;
+    private TextView todaysGoalTitle;
     private RecyclerView dailyGoalsRecyclerView;
     private RecyclerView contributionGrid;
     private PieChart pieChart;
@@ -83,6 +86,9 @@ public class ModernMainActivity extends BaseActivity {
     private Calendar currentCalendar;
     private UltraSimpleAdapter contributionAdapter;
     private LeetCodeAPI leetCodeAPI;
+    
+    // Date tracking for daily goals
+    private String lastGoalsDate = "";
     
     // Add submission calendar data and caching like MainActivity
     private org.json.JSONObject submissionCalendarData;
@@ -125,8 +131,27 @@ public class ModernMainActivity extends BaseActivity {
     private void initializeViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
         navigationView = findViewById(R.id.navigationView);
+        
+        // Initialize SwipeRefreshLayout
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        setupSwipeRefresh();
+        
         initializeCustomBottomNavigation();
         bottomNavCard = findViewById(R.id.bottomNavCard);
+        
+        // Ensure bottom navigation stays fixed at bottom and is visible
+        if (bottomNavCard != null) {
+            bottomNavCard.setVisibility(View.VISIBLE);
+            bottomNavCard.bringToFront();
+            bottomNavCard.setTranslationZ(100f); // Ensure it's above other views
+            
+            // Post a runnable to ensure layout is complete before positioning
+            bottomNavCard.post(() -> {
+                bottomNavCard.bringToFront();
+                bottomNavCard.setTranslationZ(100f);
+            });
+        }
+        
         themeToggleContainer = findViewById(R.id.themeToggleContainer);
         
         // Initialize custom toggle components
@@ -147,6 +172,7 @@ public class ModernMainActivity extends BaseActivity {
         hardCountTableText = findViewById(R.id.hardCountTableText);
         totalCountText = findViewById(R.id.totalCountText);
         goalCountBadge = findViewById(R.id.goalCountBadge);
+        todaysGoalTitle = findViewById(R.id.todaysGoalTitle);
         dailyGoalsRecyclerView = findViewById(R.id.dailyGoalsRecyclerView);
         contributionGrid = findViewById(R.id.contributionGrid);
         pieChart = findViewById(R.id.pieChart);
@@ -164,6 +190,93 @@ public class ModernMainActivity extends BaseActivity {
         View.OnClickListener menuClickListener = v -> drawerLayout.openDrawer(GravityCompat.START);
         menuButton.setOnClickListener(menuClickListener);
         menuButtonContainer.setOnClickListener(menuClickListener);
+    }
+    
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setColorSchemeResources(
+            R.color.accent_secondary,
+            R.color.easy_color,
+            R.color.medium_color,
+            R.color.hard_color
+        );
+        
+        // Set custom background with shadow for refresh indicator
+        swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.surface_primary);
+        
+        // Add shadow and elevation effects programmatically
+        swipeRefreshLayout.setElevation(8f);
+        
+        // Set size of the refresh indicator
+        swipeRefreshLayout.setSize(androidx.swiperefreshlayout.widget.SwipeRefreshLayout.LARGE);
+        
+        // Set the distance to trigger refresh
+        swipeRefreshLayout.setDistanceToTriggerSync(120);
+        
+        // Set progress view offset for better visual feedback
+        swipeRefreshLayout.setProgressViewOffset(false, 0, 200);
+        
+        // Add subtle shadow to nested scroll view
+        View nestedScrollView = findViewById(R.id.nestedScrollView);
+        if (nestedScrollView != null) {
+            nestedScrollView.setElevation(2f);
+        }
+        
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            System.out.println("DEBUG: Pull-to-refresh triggered - refreshing daily goals");
+            
+            // Add shadow animation during refresh
+            animateRefreshShadow(true);
+            
+            // Update the title with current date
+            updateTodaysGoalTitle();
+            
+            // Clear current goals and show loading
+            List<DailyGoal> loadingGoals = new ArrayList<>();
+            loadingGoals.add(new DailyGoal("Refreshing daily goals...", "Please wait", "Easy", false));
+            updateGoalsAdapter(loadingGoals);
+            
+            // Refresh all data
+            fetchInitialData();
+            fetchDailyGoalsFromAPI();
+            
+            // Stop refreshing after a delay to show completion
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                    // Remove shadow animation after refresh
+                    animateRefreshShadow(false);
+                    System.out.println("DEBUG: Pull-to-refresh completed");
+                }
+            }, 3000); // 3 seconds delay to allow API calls to complete
+        });
+    }
+    
+    /**
+     * Animate shadow effect during refresh
+     */
+    private void animateRefreshShadow(boolean isRefreshing) {
+        if (swipeRefreshLayout == null) return;
+        
+        ValueAnimator shadowAnimator;
+        if (isRefreshing) {
+            // Increase shadow when refreshing starts
+            shadowAnimator = ValueAnimator.ofFloat(swipeRefreshLayout.getElevation(), 16f);
+            shadowAnimator.addUpdateListener(animation -> {
+                float elevation = (Float) animation.getAnimatedValue();
+                swipeRefreshLayout.setElevation(elevation);
+            });
+        } else {
+            // Decrease shadow when refreshing ends
+            shadowAnimator = ValueAnimator.ofFloat(swipeRefreshLayout.getElevation(), 8f);
+            shadowAnimator.addUpdateListener(animation -> {
+                float elevation = (Float) animation.getAnimatedValue();
+                swipeRefreshLayout.setElevation(elevation);
+            });
+        }
+        
+        shadowAnimator.setDuration(300);
+        shadowAnimator.setInterpolator(new DecelerateInterpolator());
+        shadowAnimator.start();
     }
     
     private void setupThemeToggle() {
@@ -751,20 +864,175 @@ public class ModernMainActivity extends BaseActivity {
     private void setupDailyGoals() {
         dailyGoalsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         
-        // Start with sample data to ensure UI works
-        List<DailyGoal> goals = generateSampleGoals();
-        DailyGoalsAdapter adapter = new DailyGoalsAdapter(goals);
-        dailyGoalsRecyclerView.setAdapter(adapter);
-        goalCountBadge.setText(String.valueOf(goals.size()));
+        // Check if we need to refresh goals due to date change
+        checkAndRefreshDailyGoals();
+    }
+    
+    /**
+     * Check if the date has changed since last goals generation and refresh if needed
+     */
+    private void checkAndRefreshDailyGoals() {
+        String currentDate = getCurrentDateString();
         
-        System.out.println("DEBUG: setupDailyGoals - Loaded " + goals.size() + " sample goals");
+        // Load the last date from SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("daily_goals", Context.MODE_PRIVATE);
+        lastGoalsDate = prefs.getString("last_goals_date", "");
         
-        // Then try to fetch from API (will replace sample data if successful)
-        fetchDailyGoalsFromAPI();
+        System.out.println("DEBUG: Current date: " + currentDate + ", Last goals date: " + lastGoalsDate);
+        
+        // Always update the title with current date first
+        updateTodaysGoalTitle();
+        
+        if (!currentDate.equals(lastGoalsDate)) {
+            System.out.println("DEBUG: Date changed - refreshing daily goals");
+            
+            // Save the new date
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("last_goals_date", currentDate);
+            editor.apply();
+            lastGoalsDate = currentDate;
+            
+            // Fetch fresh daily goals
+            fetchDailyGoalsFromAPI();
+        } else {
+            System.out.println("DEBUG: Same date - checking if goals exist");
+            
+            // Same date, but check if we have goals cached
+            List<DailyGoal> cachedGoals = loadCachedGoals();
+            if (cachedGoals.isEmpty()) {
+                System.out.println("DEBUG: No cached goals found - fetching fresh goals");
+                fetchDailyGoalsFromAPI();
+            } else {
+                System.out.println("DEBUG: Using cached goals for today");
+                updateGoalsAdapter(cachedGoals);
+            }
+        }
+    }
+    
+    /**
+     * Get current date as a string in YYYY-MM-DD format
+     */
+    private String getCurrentDateString() {
+        Calendar today = Calendar.getInstance();
+        return String.format("%04d-%02d-%02d", 
+            today.get(Calendar.YEAR), 
+            today.get(Calendar.MONTH) + 1,  // Month is 0-based
+            today.get(Calendar.DAY_OF_MONTH));
+    }
+    
+    /**
+     * Get formatted date for display (e.g., "Aug 28, 2025")
+     */
+    private String getFormattedDateString() {
+        Calendar today = Calendar.getInstance();
+        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        
+        return months[today.get(Calendar.MONTH)] + " " + 
+               today.get(Calendar.DAY_OF_MONTH) + ", " + 
+               today.get(Calendar.YEAR);
+    }
+    
+    /**
+     * Get ordinal date format for daily goals (e.g., "28th August")
+     */
+    private String getOrdinalDateString() {
+        Calendar today = Calendar.getInstance();
+        String[] months = {"January", "February", "March", "April", "May", "June",
+                          "July", "August", "September", "October", "November", "December"};
+        
+        int day = today.get(Calendar.DAY_OF_MONTH);
+        String ordinalSuffix;
+        
+        if (day >= 11 && day <= 13) {
+            ordinalSuffix = "th";
+        } else {
+            switch (day % 10) {
+                case 1: ordinalSuffix = "st"; break;
+                case 2: ordinalSuffix = "nd"; break;
+                case 3: ordinalSuffix = "rd"; break;
+                default: ordinalSuffix = "th"; break;
+            }
+        }
+        
+        return day + ordinalSuffix + " " + months[today.get(Calendar.MONTH)];
+    }
+    
+    /**
+     * Update the Today's Goal title
+     */
+    private void updateTodaysGoalTitle() {
+        if (todaysGoalTitle != null) {
+            todaysGoalTitle.setText("Today's Goal");
+            System.out.println("DEBUG: Updated Today's Goal title");
+        }
+    }
+    
+    /**
+     * Load cached goals from SharedPreferences
+     */
+    private List<DailyGoal> loadCachedGoals() {
+        SharedPreferences prefs = getSharedPreferences("daily_goals", Context.MODE_PRIVATE);
+        String cachedGoalsJson = prefs.getString("cached_goals", "");
+        
+        List<DailyGoal> goals = new ArrayList<>();
+        
+        if (!cachedGoalsJson.isEmpty()) {
+            try {
+                org.json.JSONArray jsonArray = new org.json.JSONArray(cachedGoalsJson);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    org.json.JSONObject goalJson = jsonArray.getJSONObject(i);
+                    goals.add(new DailyGoal(
+                        goalJson.getString("title"),
+                        goalJson.getString("category"),
+                        goalJson.getString("difficulty"),
+                        goalJson.getBoolean("completed")
+                    ));
+                }
+                System.out.println("DEBUG: Loaded " + goals.size() + " cached goals");
+            } catch (Exception e) {
+                System.err.println("DEBUG: Error loading cached goals: " + e.getMessage());
+            }
+        }
+        
+        return goals;
+    }
+    
+    /**
+     * Save goals to cache
+     */
+    private void saveCachedGoals(List<DailyGoal> goals) {
+        try {
+            org.json.JSONArray jsonArray = new org.json.JSONArray();
+            for (DailyGoal goal : goals) {
+                org.json.JSONObject goalJson = new org.json.JSONObject();
+                goalJson.put("title", goal.getTitle());
+                goalJson.put("category", goal.getCategory());
+                goalJson.put("difficulty", goal.getDifficulty());
+                goalJson.put("completed", goal.isCompleted());
+                jsonArray.put(goalJson);
+            }
+            
+            SharedPreferences prefs = getSharedPreferences("daily_goals", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("cached_goals", jsonArray.toString());
+            editor.apply();
+            
+            System.out.println("DEBUG: Cached " + goals.size() + " goals for today");
+        } catch (Exception e) {
+            System.err.println("DEBUG: Error caching goals: " + e.getMessage());
+        }
     }
     
     private void fetchDailyGoalsFromAPI() {
         System.out.println("DEBUG: Starting API fetch for daily goals");
+        
+        // Show loading state
+        runOnUiThread(() -> {
+            List<DailyGoal> loadingGoals = new ArrayList<>();
+            loadingGoals.add(new DailyGoal("Loading daily goals...", "Please wait", "Easy", false));
+            updateGoalsAdapter(loadingGoals);
+        });
         
         LeetCodeAPI api = new LeetCodeAPI();
         
@@ -801,17 +1069,23 @@ public class ModernMainActivity extends BaseActivity {
                                 apiGoals.add(new DailyGoal(title, category, difficulty, false));
                                 System.out.println("DEBUG: Added daily challenge - " + title + " (" + difficulty + ")");
                                 
-                                // Update UI with daily challenge
-                                updateGoalsAdapter(apiGoals);
+                                // Update UI with daily challenge immediately
+                                updateGoalsAdapter(new ArrayList<>(apiGoals));
+                            } else {
+                                System.out.println("DEBUG: No active daily challenge found");
                             }
+                        } else {
+                            System.out.println("DEBUG: No data field in response");
                         }
                         
-                        // Add a couple more problems for variety
-                        fetchSimplePracticeProblems(apiGoals);
+                        // Add practice problems for today
+                        addTodaysPracticeProblems(apiGoals);
                         
                     } catch (Exception e) {
                         System.err.println("DEBUG: Error parsing daily challenge: " + e.getMessage());
                         e.printStackTrace();
+                        // Fall back to sample goals on error
+                        loadFallbackGoals();
                     }
                 });
             }
@@ -819,15 +1093,19 @@ public class ModernMainActivity extends BaseActivity {
             @Override
             public void onError(Exception error) {
                 System.err.println("DEBUG: Error fetching daily challenge: " + error.getMessage());
-                // Keep the sample data that's already loaded
+                error.printStackTrace();
+                // Fall back to sample goals on API error
+                runOnUiThread(() -> loadFallbackGoals());
             }
         });
     }
     
-    private void fetchSimplePracticeProblems(List<DailyGoal> existingGoals) {
+    private void addTodaysPracticeProblems(List<DailyGoal> existingGoals) {
+        System.out.println("DEBUG: Adding today's practice problems");
+        
         LeetCodeAPI api = new LeetCodeAPI();
         
-        // Just fetch one easy problem for now
+        // Fetch an easy problem for warm-up
         api.getRandomProblem("Easy", new LeetCodeAPI.LeetCodeCallback() {
             @Override
             public void onSuccess(String response) {
@@ -851,24 +1129,97 @@ public class ModernMainActivity extends BaseActivity {
                                             category = question.getJSONArray("topicTags").getJSONObject(0).getString("name");
                                         }
                                         
-                                        existingGoals.add(new DailyGoal(title, category, difficulty, false));
+                                        existingGoals.add(new DailyGoal(title + " (Warm-up)", category, difficulty, false));
                                         System.out.println("DEBUG: Added practice problem - " + title);
                                         
-                                        // Update UI
-                                        updateGoalsAdapter(existingGoals);
+                                        // Add a medium problem too
+                                        addMediumPracticeProblems(existingGoals);
                                     }
                                 }
                             }
                         }
                     } catch (Exception e) {
-                        System.err.println("DEBUG: Error parsing practice problem: " + e.getMessage());
+                        System.err.println("DEBUG: Error parsing easy practice problem: " + e.getMessage());
+                        // Add medium problems anyway
+                        addMediumPracticeProblems(existingGoals);
                     }
                 });
             }
             
             @Override
             public void onError(Exception error) {
-                System.err.println("DEBUG: Error fetching practice problem: " + error.getMessage());
+                System.err.println("DEBUG: Error fetching easy practice problem: " + error.getMessage());
+                runOnUiThread(() -> addMediumPracticeProblems(existingGoals));
+            }
+        });
+    }
+    
+    private void addMediumPracticeProblems(List<DailyGoal> existingGoals) {
+        System.out.println("DEBUG: Adding medium practice problems");
+        
+        LeetCodeAPI api = new LeetCodeAPI();
+        
+        // Fetch a medium problem for challenge
+        api.getRandomProblem("Medium", new LeetCodeAPI.LeetCodeCallback() {
+            @Override
+            public void onSuccess(String response) {
+                runOnUiThread(() -> {
+                    try {
+                        org.json.JSONObject jsonResponse = new org.json.JSONObject(response);
+                        if (jsonResponse.has("data")) {
+                            org.json.JSONObject data = jsonResponse.getJSONObject("data");
+                            if (data.has("problemsetQuestionList")) {
+                                org.json.JSONObject problemList = data.getJSONObject("problemsetQuestionList");
+                                if (problemList.has("questions")) {
+                                    org.json.JSONArray questions = problemList.getJSONArray("questions");
+                                    if (questions.length() > 0) {
+                                        org.json.JSONObject question = questions.getJSONObject(0);
+                                        
+                                        String title = question.getString("title");
+                                        String difficulty = question.getString("difficulty");
+                                        String category = "Challenge";
+                                        
+                                        if (question.has("topicTags") && question.getJSONArray("topicTags").length() > 0) {
+                                            category = question.getJSONArray("topicTags").getJSONObject(0).getString("name");
+                                        }
+                                        
+                                        existingGoals.add(new DailyGoal(title + " (Challenge)", category, difficulty, false));
+                                        System.out.println("DEBUG: Added medium challenge - " + title);
+                                        
+                                        // Update UI with all goals
+                                        updateGoalsAdapter(new ArrayList<>(existingGoals));
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // If no medium problem found, at least update UI with existing goals
+                        if (existingGoals.size() > 0) {
+                            updateGoalsAdapter(new ArrayList<>(existingGoals));
+                        }
+                        
+                    } catch (Exception e) {
+                        System.err.println("DEBUG: Error parsing medium practice problem: " + e.getMessage());
+                        // Update UI with existing goals anyway
+                        if (existingGoals.size() > 0) {
+                            updateGoalsAdapter(new ArrayList<>(existingGoals));
+                        }
+                    }
+                });
+            }
+            
+            @Override
+            public void onError(Exception error) {
+                System.err.println("DEBUG: Error fetching medium practice problem: " + error.getMessage());
+                runOnUiThread(() -> {
+                    // Update UI with existing goals anyway
+                    if (existingGoals.size() > 0) {
+                        updateGoalsAdapter(new ArrayList<>(existingGoals));
+                    } else {
+                        // If no goals at all, load fallback
+                        loadFallbackGoals();
+                    }
+                });
             }
         });
     }
@@ -878,27 +1229,116 @@ public class ModernMainActivity extends BaseActivity {
         DailyGoalsAdapter adapter = new DailyGoalsAdapter(goals);
         dailyGoalsRecyclerView.setAdapter(adapter);
         goalCountBadge.setText(String.valueOf(goals.size()));
+        
+        // Cache the goals for today (but not if it's just a loading message)
+        if (!goals.isEmpty() && !goals.get(0).getTitle().contains("Loading") && !goals.get(0).getTitle().contains("Refreshing")) {
+            saveCachedGoals(goals);
+        }
+        
         System.out.println("DEBUG: Adapter updated and badge set to " + goals.size());
     }
     
     private void loadFallbackGoals() {
-        // Fallback to sample data if API fails
-        List<DailyGoal> goals = generateSampleGoals();
+        System.out.println("DEBUG: Loading fallback goals (API unavailable)");
+        
+        // Generate date-specific goals for today
+        java.util.Calendar today = java.util.Calendar.getInstance();
+        int dayOfWeek = today.get(java.util.Calendar.DAY_OF_WEEK);
+        
+        List<DailyGoal> goals = new ArrayList<>();
+        
+        // Add goals based on day of week for variety
+        switch (dayOfWeek) {
+            case java.util.Calendar.SUNDAY:
+                goals.add(new DailyGoal("Two Sum", "Array", "Easy", false));
+                goals.add(new DailyGoal("Valid Parentheses", "Stack", "Easy", false));
+                goals.add(new DailyGoal("Add Two Numbers", "Linked List", "Medium", false));
+                break;
+            case java.util.Calendar.MONDAY:
+                goals.add(new DailyGoal("Palindrome Number", "Math", "Easy", false));
+                goals.add(new DailyGoal("Maximum Subarray", "Array", "Medium", false));
+                goals.add(new DailyGoal("Merge Two Sorted Lists", "Linked List", "Easy", false));
+                break;
+            case java.util.Calendar.TUESDAY:
+                goals.add(new DailyGoal("Roman to Integer", "String", "Easy", false));
+                goals.add(new DailyGoal("3Sum", "Array", "Medium", false));
+                goals.add(new DailyGoal("Remove Duplicates from Sorted Array", "Array", "Easy", false));
+                break;
+            case java.util.Calendar.WEDNESDAY:
+                goals.add(new DailyGoal("Longest Common Prefix", "String", "Easy", false));
+                goals.add(new DailyGoal("Container With Most Water", "Two Pointers", "Medium", false));
+                goals.add(new DailyGoal("Search Insert Position", "Binary Search", "Easy", false));
+                break;
+            case java.util.Calendar.THURSDAY:
+                goals.add(new DailyGoal("Length of Last Word", "String", "Easy", false));
+                goals.add(new DailyGoal("Letter Combinations of Phone Number", "Backtracking", "Medium", false));
+                goals.add(new DailyGoal("Plus One", "Array", "Easy", false));
+                break;
+            case java.util.Calendar.FRIDAY:
+                goals.add(new DailyGoal("Climbing Stairs", "Dynamic Programming", "Easy", false));
+                goals.add(new DailyGoal("Generate Parentheses", "Backtracking", "Medium", false));
+                goals.add(new DailyGoal("Remove Element", "Array", "Easy", false));
+                break;
+            case java.util.Calendar.SATURDAY:
+                goals.add(new DailyGoal("Merge Sorted Array", "Array", "Easy", false));
+                goals.add(new DailyGoal("Longest Substring Without Repeating Characters", "String", "Medium", false));
+                goals.add(new DailyGoal("Binary Tree Inorder Traversal", "Tree", "Easy", false));
+                break;
+        }
+        
+        // Add a weekend bonus challenge
+        if (dayOfWeek == java.util.Calendar.SATURDAY || dayOfWeek == java.util.Calendar.SUNDAY) {
+            goals.add(new DailyGoal("Weekend Challenge: Median of Two Sorted Arrays", "Array", "Hard", false));
+        }
+        
         DailyGoalsAdapter adapter = new DailyGoalsAdapter(goals);
         dailyGoalsRecyclerView.setAdapter(adapter);
         goalCountBadge.setText(String.valueOf(goals.size()));
-        System.out.println("DEBUG: Loaded fallback sample goals");
+        
+        // Cache these fallback goals for today
+        saveCachedGoals(goals);
+        
+        System.out.println("DEBUG: Loaded " + goals.size() + " fallback goals for " + 
+                         (dayOfWeek == java.util.Calendar.SUNDAY ? "Sunday" :
+                          dayOfWeek == java.util.Calendar.MONDAY ? "Monday" :
+                          dayOfWeek == java.util.Calendar.TUESDAY ? "Tuesday" :
+                          dayOfWeek == java.util.Calendar.WEDNESDAY ? "Wednesday" :
+                          dayOfWeek == java.util.Calendar.THURSDAY ? "Thursday" :
+                          dayOfWeek == java.util.Calendar.FRIDAY ? "Friday" : "Saturday"));
     }
     
     private List<DailyGoal> generateSampleGoals() {
         List<DailyGoal> goals = new ArrayList<>();
-        goals.add(new DailyGoal("Reverse An Array", "Array", "Easy", false));
-        goals.add(new DailyGoal("Min And Max In Array", "Array", "Easy", false));
-        goals.add(new DailyGoal("Max Consecutive Ones", "Array", "Easy", false));
-        goals.add(new DailyGoal("Find Numbers With Even Number Of Digits", "Array", "Easy", false));
-        goals.add(new DailyGoal("Duplicate Zeros", "Array", "Easy", false));
-        goals.add(new DailyGoal("Squares of Sorted Array", "Array", "Easy", false));
+        
+        // Today's essentials - always good practice
+        goals.add(new DailyGoal("Two Sum", "Array", "Easy", false));
+        goals.add(new DailyGoal("Valid Parentheses", "Stack", "Easy", false));
+        goals.add(new DailyGoal("Maximum Subarray", "Array", "Medium", false));
+        goals.add(new DailyGoal("Merge Two Sorted Lists", "Linked List", "Easy", false));
+        
         return goals;
+    }
+    
+    /**
+     * Public method to force refresh daily goals
+     * Can be called when user wants fresh goals
+     */
+    public void refreshDailyGoals() {
+        System.out.println("DEBUG: Force refreshing daily goals");
+        
+        // Update the title with current date
+        updateTodaysGoalTitle();
+        
+        // Clear cached date to force refresh
+        String currentDate = getCurrentDateString();
+        SharedPreferences prefs = getSharedPreferences("daily_goals", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("last_goals_date", currentDate);
+        editor.remove("cached_goals"); // Clear cached goals to force fresh fetch
+        editor.apply();
+        lastGoalsDate = currentDate;
+        
+        fetchDailyGoalsFromAPI();
     }
     
     private List<Integer> generateMonthlyContributionData(Calendar monthCalendar) {
@@ -1364,6 +1804,14 @@ public class ModernMainActivity extends BaseActivity {
     }
     
     @Override
+    protected void onResume() {
+        super.onResume();
+        
+        // Check if the date has changed since last time
+        checkAndRefreshDailyGoals();
+    }
+    
+    @Override
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
@@ -1397,6 +1845,9 @@ public class ModernMainActivity extends BaseActivity {
             holder.goalCategory.setText(goal.getCategory());
             holder.difficultyBadge.setText(goal.getDifficulty());
             
+            // Set current date in ordinal format (e.g., "28th August")
+            holder.goalDate.setText(getOrdinalDateString());
+            
             System.out.println("DEBUG: Binding goal - " + goal.getTitle() + " (" + goal.getDifficulty() + ")");
             
             // Apply theme-based colors to the card and text
@@ -1408,6 +1859,7 @@ public class ModernMainActivity extends BaseActivity {
                 }
                 holder.goalTitle.setTextColor(getResources().getColor(R.color.leetcode_text_primary, getTheme()));
                 holder.goalCategory.setTextColor(getResources().getColor(R.color.leetcode_text_secondary, getTheme()));
+                holder.goalDate.setTextColor(getResources().getColor(R.color.leetcode_text_secondary, getTheme()));
             } else {
                 // Light theme colors for list items
                 if (holder.itemView instanceof com.google.android.material.card.MaterialCardView) {
@@ -1416,6 +1868,7 @@ public class ModernMainActivity extends BaseActivity {
                 }
                 holder.goalTitle.setTextColor(getResources().getColor(R.color.text_primary, getTheme()));
                 holder.goalCategory.setTextColor(getResources().getColor(R.color.text_secondary, getTheme()));
+                holder.goalDate.setTextColor(getResources().getColor(R.color.text_secondary, getTheme()));
             }
             
             // Set difficulty badge background and text color
@@ -1437,7 +1890,7 @@ public class ModernMainActivity extends BaseActivity {
         }
         
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView goalTitle, goalCategory, difficultyBadge;
+            TextView goalTitle, goalCategory, difficultyBadge, goalDate;
             View statusIndicator;
             
             ViewHolder(View itemView) {
@@ -1445,6 +1898,7 @@ public class ModernMainActivity extends BaseActivity {
                 goalTitle = itemView.findViewById(R.id.goalTitle);
                 goalCategory = itemView.findViewById(R.id.goalCategory);
                 difficultyBadge = itemView.findViewById(R.id.difficultyBadge);
+                goalDate = itemView.findViewById(R.id.goalDate);
 //                statusIndicator = itemView.findViewById(R.id.statusIndicator);
             }
         }

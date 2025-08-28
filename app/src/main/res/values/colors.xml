@@ -87,15 +87,50 @@
     <color name="background_primary">#FAFAFA</color>
     <color name="background_secondary">#F5F5F5</color>
     <color name="surface_primary">#FFFFFF</color>
+    <color name="surface_secondary">#F5F5F5</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+    <color name="text_tertiary">#9E9E9E</color>
     <color name="premium_gradient_start">#667eea</color>
     <color name="premium_gradient_end">#764ba2</color>
+    
+    <!-- Primary theme colors -->
+    <color name="colorPrimary">#1976D2</color>
+    <color name="colorPrimaryVariant">#1565C0</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorSecondary">#FFA726</color>
+    <color name="colorSecondaryVariant">#F57C00</color>
+    <color name="colorOnSecondary">#000000</color>
+    <color name="backgroundColor">#FAFAFA</color>
+    <color name="colorOnBackground">#212121</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#212121</color>
+    <color name="colorError">#F44336</color>
+    <color name="colorOnError">#FFFFFF</color>
+    
+    <!-- Status Colors -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FF9800</color>
+    <color name="error">#F44336</color>
+    <color name="info">#2196F3</color>
+    
+    <!-- Difficulty Colors -->
+    <color name="difficulty_easy">#4CAF50</color>
+    <color name="difficulty_medium">#FF9800</color>
+    <color name="difficulty_hard">#F44336</color>
+    
+    <!-- Other Colors -->
+    <color name="divider">#E0E0E0</color>
+    <color name="semi_transparent">#80FFFFFF</color>
     
     <!-- Theme-specific colors for dark mode -->
     <color name="leetcode_dark_card">#262626</color>
     <color name="leetcode_dark_card_light">#333333</color>
     <color name="leetcode_text_light">#FFFFFF</color>
     <color name="leetcode_text_dark">#212121</color>
+    
+    <!-- Bottom Navigation Colors -->
+    <color name="bottom_nav_selected">#BB86FC</color>
+    <color name="bottom_nav_unselected">#808080</color>
 </resources>

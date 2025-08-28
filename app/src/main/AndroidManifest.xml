@@ -22,8 +22,14 @@
         </activity>
         
         <!-- Main Activity -->
-                <activity
+        <activity
             android:name=".MainActivity"
+            android:exported="true">
+        </activity>
+        
+        <!-- Main Activity with Navigation -->
+        <activity
+            android:name=".MainActivityWithNav"
             android:exported="true">
         </activity>
         
