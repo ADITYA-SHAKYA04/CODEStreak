@@ -1901,7 +1901,8 @@ public class ProblemsActivity extends BaseActivity {
         });
         
         navCards.setOnClickListener(v -> {
-            // TODO: Navigate to Cards activity when created
+            Intent intent = new Intent(ProblemsActivity.this, CompanyProblemsActivity.class);
+            startActivity(intent);
         });
         
         navRevision.setOnClickListener(v -> {

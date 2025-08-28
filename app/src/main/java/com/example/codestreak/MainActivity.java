@@ -133,44 +133,7 @@ public class MainActivity extends AppCompatActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        
-        if (id == R.id.action_change_username) {
-            // Clear the stored username and restart login activity
-            SharedPreferences sharedPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPref.edit();
-            editor.remove("username");
-            editor.apply();
-            
-            // Also clear new format
-            SharedPreferences newPref = getSharedPreferences("CodeStreakPrefs", Context.MODE_PRIVATE);
-            SharedPreferences.Editor newEditor = newPref.edit();
-            newEditor.remove("leetcode_username");
-            newEditor.apply();
-            
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.putExtra("change_username", true);
-            startActivity(intent);
-            finish();
-            return true;
-        } else if (id == R.id.action_logout) {
-            // Clear all user data and logout
-            SharedPreferences sharedPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPref.edit();
-            editor.clear();
-            editor.apply();
-            
-            SharedPreferences newPref = getSharedPreferences("CodeStreakPrefs", Context.MODE_PRIVATE);
-            SharedPreferences.Editor newEditor = newPref.edit();
-            newEditor.clear();
-            newEditor.apply();
-            
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            finish();
-            return true;
-        }
-        
+        // No menu items to handle since they were removed
         return super.onOptionsItemSelected(item);
     }
     

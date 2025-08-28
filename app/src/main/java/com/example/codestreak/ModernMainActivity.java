@@ -54,6 +54,8 @@ public class ModernMainActivity extends BaseActivity {
     
     // UI Components  
     private SwipeRefreshLayout swipeRefreshLayout;
+    private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
     private LinearLayout navHome, navProgress, navCards, navRevision;
     private ImageView homeIcon, progressIcon, cardsIcon, revisionIcon;
     private TextView homeText, progressText, cardsText, revisionText;
@@ -207,6 +209,80 @@ public class ModernMainActivity extends BaseActivity {
         View.OnClickListener menuClickListener = v -> drawerLayout.openDrawer(GravityCompat.START);
         menuButton.setOnClickListener(menuClickListener);
         menuButtonContainer.setOnClickListener(menuClickListener);
+        
+        // Setup navigation drawer item clicks
+        setupNavigationDrawer();
+    }
+    
+    private void setupNavigationDrawer() {
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            
+            if (id == R.id.nav_profile) {
+                // Handle profile click
+                // TODO: Navigate to profile activity
+            } else if (id == R.id.nav_stats) {
+                // Handle stats click
+                // TODO: Navigate to stats activity
+            } else if (id == R.id.nav_achievements) {
+                // Handle achievements click
+                // TODO: Navigate to achievements activity
+            } else if (id == R.id.nav_settings) {
+                // Handle settings click
+                // TODO: Navigate to settings activity
+            } else if (id == R.id.nav_help) {
+                // Handle help click
+                // TODO: Navigate to help activity
+            } else if (id == R.id.nav_about) {
+                // Handle about click
+                // TODO: Navigate to about activity
+            } else if (id == R.id.nav_change_username) {
+                // Handle change username click
+                showChangeUsernameDialog();
+            } else if (id == R.id.nav_logout) {
+                // Handle logout click
+                handleLogout();
+            }
+            
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+    }
+    
+    private void showChangeUsernameDialog() {
+        // Clear the stored username and restart login activity
+        SharedPreferences sharedPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.remove("username");
+        editor.apply();
+        
+        // Also clear new format
+        SharedPreferences newPref = getSharedPreferences("CodeStreakPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor newEditor = newPref.edit();
+        newEditor.remove("leetcode_username");
+        newEditor.apply();
+        
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.putExtra("change_username", true);
+        startActivity(intent);
+        finish();
+    }
+    
+    private void handleLogout() {
+        // Clear all user data and logout
+        SharedPreferences sharedPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.clear();
+        editor.apply();
+        
+        SharedPreferences newPref = getSharedPreferences("CodeStreakPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor newEditor = newPref.edit();
+        newEditor.clear();
+        newEditor.apply();
+        
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
     
     private void setupSwipeRefresh() {
@@ -681,7 +757,10 @@ public class ModernMainActivity extends BaseActivity {
             selectNavItem(1);
             startActivity(new Intent(ModernMainActivity.this, ProblemsActivity.class));
         });
-        navCards.setOnClickListener(v -> selectNavItem(2));
+        navCards.setOnClickListener(v -> {
+            Intent intent = new Intent(ModernMainActivity.this, CompanyProblemsActivity.class);
+            startActivity(intent);
+        });
         navRevision.setOnClickListener(v -> selectNavItem(3));
         
         // Set home as default selected
@@ -708,7 +787,7 @@ public class ModernMainActivity extends BaseActivity {
                 progressText.setTextColor(activeColor);
                 progressText.setTypeface(null, android.graphics.Typeface.BOLD);
                 break;
-            case 2: // Cards
+            case 2: // Companies
                 cardsIndicator.setVisibility(View.VISIBLE);
                 cardsIcon.setColorFilter(activeColor);
                 cardsText.setTextColor(activeColor);

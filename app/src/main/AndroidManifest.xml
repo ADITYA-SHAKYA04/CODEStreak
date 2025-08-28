@@ -56,6 +56,13 @@
             android:screenOrientation="portrait">
         </activity>
         
+        <!-- Company Problems Activity -->
+        <activity
+            android:name=".CompanyProblemsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait">
+        </activity>
+        
     </application>
 
 </manifest>

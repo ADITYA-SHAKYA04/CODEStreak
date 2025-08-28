@@ -114,7 +114,7 @@
 
     </LinearLayout>
 
-    <!-- CARDS -->
+    <!-- COMPANIES -->
     <LinearLayout
         android:id="@+id/nav_cards"
         android:layout_width="0dp"
@@ -146,7 +146,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_cards"
+                android:src="@drawable/ic_company"
                 app:tint="@color/accent_secondary" />
 
         </FrameLayout>
@@ -160,9 +160,9 @@
             android:includeFontPadding="false"
             android:lineSpacingExtra="0dp"
             android:lineSpacingMultiplier="1.0"
-            android:text="CARDS"
+            android:text="COMPANIES"
             android:textColor="@color/accent_secondary"
-            android:textSize="14sp" />
+            android:textSize="12sp" />
 
     </LinearLayout>
 

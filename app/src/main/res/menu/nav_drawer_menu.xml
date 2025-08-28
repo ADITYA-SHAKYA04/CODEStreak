@@ -40,4 +40,20 @@
         </menu>
     </item>
     
+    <!-- User Account Options -->
+    <item android:title="Account">
+        <menu>
+            <item
+                android:id="@+id/nav_change_username"
+                android:icon="@drawable/ic_person"
+                android:title="Change Username" />
+            
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@android:drawable/ic_menu_revert"
+                android:title="Logout" />
+                
+        </menu>
+    </item>
+    
 </menu>
