@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -18,24 +23,29 @@
         <activity
             android:name=".LoginActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask"
+            android:noHistory="true">
         </activity>
         
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
         </activity>
         
         <!-- Main Activity with Navigation -->
         <activity
             android:name=".MainActivityWithNav"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
         </activity>
         
         <activity
             android:name=".ModernMainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -46,22 +56,58 @@
         <activity
             android:name=".ProblemsActivity"
             android:exported="false"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ModernMainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ModernMainActivity" />
         </activity>
         
         <!-- Problem Detail Activity -->
         <activity
             android:name=".ProblemDetailActivity"
             android:exported="false"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ProblemsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ProblemsActivity" />
         </activity>
         
         <!-- Company Problems Activity -->
         <activity
             android:name=".CompanyProblemsActivity"
             android:exported="false"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ModernMainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ModernMainActivity" />
         </activity>
+        
+        <!-- Daily Notification Receiver -->
+        <receiver
+            android:name=".DailyNotificationReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.codestreak.MORNING_NOTIFICATION" />
+                <action android:name="com.example.codestreak.EVENING_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- Boot Receiver to reschedule notifications after device restart -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
         
     </application>
 

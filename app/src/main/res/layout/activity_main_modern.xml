@@ -459,6 +459,86 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Notification Settings Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginBottom="12dp"
+                            android:text="Daily Reminders"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Enable daily problem notifications"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp" />
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/notificationSwitch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Get reminded twice daily: morning (9:00 AM) and evening (8:00 PM) to maintain your coding streak!"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/testNotificationButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:text="Test Notification"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:textColor="@color/accent_primary" />
+
+                        <TextView
+                            android:id="@+id/cacheStatusText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Cache: Loading..."
+                            android:textColor="@color/text_tertiary"
+                            android:textSize="10sp"
+                            android:gravity="center"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- Calendar Section -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"

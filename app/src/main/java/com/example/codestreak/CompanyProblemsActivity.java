@@ -1054,12 +1054,15 @@ public class CompanyProblemsActivity extends BaseActivity {
         // Set click listeners
         navHome.setOnClickListener(v -> {
             Intent intent = new Intent(CompanyProblemsActivity.this, ModernMainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.putExtra("navigate_to_home", true);
             startActivity(intent);
             finish();
         });
         
         navProgress.setOnClickListener(v -> {
             Intent intent = new Intent(CompanyProblemsActivity.this, ProblemsActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
             finish();
         });
@@ -1549,5 +1552,15 @@ public class CompanyProblemsActivity extends BaseActivity {
         if (problemsRecyclerView != null && problemsRecyclerView.getAdapter() != null) {
             problemsRecyclerView.getAdapter().notifyDataSetChanged();
         }
+    }
+    
+    @Override
+    public void onBackPressed() {
+        // When back is pressed, return to home and ensure home nav is selected
+        Intent intent = new Intent(CompanyProblemsActivity.this, ModernMainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("navigate_to_home", true);
+        startActivity(intent);
+        finish();
     }
 }

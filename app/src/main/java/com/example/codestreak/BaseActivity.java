@@ -32,7 +32,31 @@ public abstract class BaseActivity extends AppCompatActivity {
         // Apply theme using AppCompatDelegate for proper Material3 theming
         applyTheme();
         
+        // Initialize notification system for the app
+        initializeNotifications();
+        
         super.onCreate(savedInstanceState);
+    }
+    
+    private void initializeNotifications() {
+        // Only initialize once per app session
+        NotificationHelper.createNotificationChannel(this);
+        
+        // Schedule notifications if this is the first launch or they're not scheduled
+        if (!hasNotificationsBeenInitialized()) {
+            NotificationScheduler.scheduleNotifications(this);
+            setNotificationsInitialized();
+        }
+    }
+    
+    private boolean hasNotificationsBeenInitialized() {
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        return prefs.getBoolean("notifications_initialized", false);
+    }
+    
+    private void setNotificationsInitialized() {
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        prefs.edit().putBoolean("notifications_initialized", true).apply();
     }
     
     private void applyTheme() {

@@ -4,7 +4,9 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,9 +26,13 @@ import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.Manifest;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -44,6 +50,10 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.google.android.material.navigation.NavigationView;
+import androidx.appcompat.widget.SwitchCompat;
+import com.google.android.material.button.MaterialButton;
+import android.Manifest;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -85,6 +95,11 @@ public class ModernMainActivity extends BaseActivity {
     private TextView monthYearText;
     private ImageButton prevMonthButton, nextMonthButton;
     
+    // Notification controls
+    private SwitchCompat notificationSwitch;
+    private MaterialButton testNotificationButton;
+    private TextView cacheStatusText;
+    
     // Data
 
     private int easyProblems = 45;
@@ -99,6 +114,9 @@ public class ModernMainActivity extends BaseActivity {
     // Date tracking for daily goals
     private String lastGoalsDate = "";
     
+    // Cache manager for performance optimization
+    private CacheManager cacheManager;
+    
     // Add submission calendar data and caching like MainActivity
     private org.json.JSONObject submissionCalendarData;
     private java.util.Set<String> monthsWithDataCache = null;
@@ -112,6 +130,15 @@ public class ModernMainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_modern);
         
+        // Initialize cache manager
+        cacheManager = new CacheManager(this);
+        
+        // Load cached data on startup
+        loadCachedDataOnStartup();
+        
+        // Initialize notification system
+        initializeNotificationSystem();
+        
         // Initialize views and setup
         initializeViews();
         setupThemeToggle();
@@ -119,6 +146,7 @@ public class ModernMainActivity extends BaseActivity {
         setupPieChart();
         setupCalendar();
         setupDailyGoals();
+        setupNotificationControls();
         
         // Check if theme settings should be shown
         if (getIntent().getBooleanExtra("show_theme_settings", false)) {
@@ -137,6 +165,52 @@ public class ModernMainActivity extends BaseActivity {
         fetchInitialData();
     }
     
+    private void initializeNotificationSystem() {
+        // Create notification channel for API 26+
+        NotificationHelper.createNotificationChannel(this);
+        
+        // Schedule daily notifications if not already scheduled
+        NotificationScheduler.scheduleNotifications(this);
+        
+        // Request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestNotificationPermission();
+        }
+    }
+    
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) 
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, 
+                    new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1001);
+            }
+        }
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == 1001) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, schedule notifications and update UI
+                NotificationScheduler.scheduleNotifications(this);
+                NotificationScheduler.setNotificationsEnabled(this, true);
+                if (notificationSwitch != null) {
+                    notificationSwitch.setChecked(true);
+                }
+                Toast.makeText(this, "Notification permission granted! Daily reminders enabled.", Toast.LENGTH_LONG).show();
+            } else {
+                // Permission denied, turn off switch
+                if (notificationSwitch != null) {
+                    notificationSwitch.setChecked(false);
+                }
+                Toast.makeText(this, "Notification permission required for daily reminders", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     private void initializeViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
         navigationView = findViewById(R.id.navigationView);
@@ -201,6 +275,11 @@ public class ModernMainActivity extends BaseActivity {
         prevMonthButton = findViewById(R.id.prevMonthButton);
         nextMonthButton = findViewById(R.id.nextMonthButton);
         
+        // Notification controls
+        notificationSwitch = findViewById(R.id.notificationSwitch);
+        testNotificationButton = findViewById(R.id.testNotificationButton);
+        cacheStatusText = findViewById(R.id.cacheStatusText);
+        
         // Setup menu button
         ImageButton menuButton = findViewById(R.id.menuButton);
         FrameLayout menuButtonContainer = (FrameLayout) menuButton.getParent();
@@ -264,6 +343,7 @@ public class ModernMainActivity extends BaseActivity {
         
         Intent intent = new Intent(this, LoginActivity.class);
         intent.putExtra("change_username", true);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
     }
@@ -281,6 +361,7 @@ public class ModernMainActivity extends BaseActivity {
         newEditor.apply();
         
         Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
     }
@@ -315,7 +396,13 @@ public class ModernMainActivity extends BaseActivity {
         }
         
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            System.out.println("DEBUG: Pull-to-refresh triggered - refreshing daily goals");
+            System.out.println("DEBUG: Pull-to-refresh triggered - refreshing daily goals and clearing caches");
+            
+            // Clear caches for fresh data
+            if (cacheManager != null) {
+                cacheManager.clearAllApiCaches();
+                System.out.println("DEBUG: Cleared API caches for fresh data");
+            }
             
             // Show skeleton loading during refresh
             showRefreshSkeleton(true);
@@ -750,10 +837,13 @@ public class ModernMainActivity extends BaseActivity {
         navHome.setOnClickListener(v -> selectNavItem(0));
         navProgress.setOnClickListener(v -> {
             selectNavItem(1);
-            startActivity(new Intent(ModernMainActivity.this, ProblemsActivity.class));
+            Intent intent = new Intent(ModernMainActivity.this, ProblemsActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
         });
         navCards.setOnClickListener(v -> {
             Intent intent = new Intent(ModernMainActivity.this, CompanyProblemsActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
         });
         navRevision.setOnClickListener(v -> selectNavItem(3));
@@ -1123,6 +1213,23 @@ public class ModernMainActivity extends BaseActivity {
     private void fetchDailyGoalsFromAPI() {
         System.out.println("DEBUG: Starting API fetch for daily goals");
         
+        // Check cache first
+        List<?> cachedGoalsRaw = cacheManager.getCachedDailyGoals();
+        if (cachedGoalsRaw != null && !cachedGoalsRaw.isEmpty()) {
+            try {
+                // Cast the cached data back to DailyGoal list
+                @SuppressWarnings("unchecked")
+                List<DailyGoal> cachedGoals = (List<DailyGoal>) cachedGoalsRaw;
+                System.out.println("DEBUG: Using cached daily goals");
+                updateGoalsAdapter(cachedGoals);
+                updateCacheStatus();
+                return;
+            } catch (ClassCastException e) {
+                System.out.println("DEBUG: Cache data type mismatch, fetching fresh data");
+                cacheManager.clearCache("daily_goals");
+            }
+        }
+        
         // Show loading state
         runOnUiThread(() -> {
             List<DailyGoal> loadingGoals = new ArrayList<>();
@@ -1329,6 +1436,11 @@ public class ModernMainActivity extends BaseActivity {
         // Cache the goals for today (but not if it's just a loading message)
         if (!goals.isEmpty() && !goals.get(0).getTitle().contains("Loading") && !goals.get(0).getTitle().contains("Refreshing")) {
             saveCachedGoals(goals);
+            // Also cache using CacheManager for improved performance
+            cacheManager.cacheDailyGoals(goals);
+            
+            // Update cache status
+            updateCacheStatus();
         }
         
         System.out.println("DEBUG: Adapter updated and badge set to " + goals.size());
@@ -1849,6 +1961,10 @@ public class ModernMainActivity extends BaseActivity {
             easyProblems = newEasy;
             mediumProblems = newMedium;
             hardProblems = newHard;
+            
+            // Cache the problem counts
+            cacheManager.cacheProblemCounts(easyProblems, mediumProblems, hardProblems);
+            
             System.out.println("DEBUG: Updated problem counts with real data");
         } else {
             System.out.println("DEBUG: No valid problem counts found, keeping default values");
@@ -1903,6 +2019,12 @@ public class ModernMainActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         
+        // Ensure home navigation is selected when returning to main activity
+        // This handles cases where user presses back button from other activities
+        if (navHome != null) {
+            selectNavItem(0);
+        }
+        
         // Check if the date has changed since last time
         checkAndRefreshDailyGoals();
     }
@@ -1912,7 +2034,9 @@ public class ModernMainActivity extends BaseActivity {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            // Instead of finishing the activity, move task to background
+            // This prevents creating multiple instances when user returns
+            moveTaskToBack(true);
         }
     }
     
@@ -2083,5 +2207,217 @@ public class ModernMainActivity extends BaseActivity {
                 }
             }
         }
+    }
+    
+    private void setupNotificationControls() {
+        // Set initial switch state
+        boolean notificationsEnabled = NotificationScheduler.areNotificationsEnabled(this);
+        notificationSwitch.setChecked(notificationsEnabled);
+        
+        // Set up switch listener
+        notificationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                // Check and request notification permission if needed
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this, 
+                                new String[]{Manifest.permission.POST_NOTIFICATIONS}, 
+                                NOTIFICATION_PERMISSION_REQUEST_CODE);
+                        return;
+                    }
+                }
+                
+                NotificationScheduler.setNotificationsEnabled(this, true);
+                Toast.makeText(this, "Daily notifications enabled!", Toast.LENGTH_SHORT).show();
+            } else {
+                NotificationScheduler.setNotificationsEnabled(this, false);
+                Toast.makeText(this, "Daily notifications disabled", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        // Set up test notification button
+        testNotificationButton.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+                    == PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                NotificationHelper.showDailyProblemNotification(this, true);
+                Toast.makeText(this, "Test notification sent!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Please enable notification permission first", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void loadCachedDataOnStartup() {
+        // Load cached problem counts
+        int[] cachedCounts = cacheManager.getCachedProblemCounts();
+        if (cachedCounts != null) {
+            easyProblems = cachedCounts[0];
+            mediumProblems = cachedCounts[1];
+            hardProblems = cachedCounts[2];
+            System.out.println("DEBUG: Loaded cached problem counts - Easy: " + easyProblems + 
+                             ", Medium: " + mediumProblems + ", Hard: " + hardProblems);
+        }
+        
+        // Load cached streak data
+        int[] cachedStreaks = cacheManager.getCachedStreakData();
+        if (cachedStreaks != null) {
+            currentStreak = cachedStreaks[0];
+            longestStreak = cachedStreaks[1];
+            System.out.println("DEBUG: Loaded cached streak data - Current: " + currentStreak + 
+                             ", Longest: " + longestStreak);
+        }
+        
+        // Load cached daily goals
+        List<?> cachedGoalsRaw = cacheManager.getCachedDailyGoals();
+        if (cachedGoalsRaw != null && !cachedGoalsRaw.isEmpty()) {
+            // Check if the cached goals are for today
+            String currentDate = getCurrentDateString();
+            SharedPreferences prefs = getSharedPreferences("daily_goals", Context.MODE_PRIVATE);
+            String lastGoalsDate = prefs.getString("last_goals_date", "");
+            
+            if (currentDate.equals(lastGoalsDate)) {
+                System.out.println("DEBUG: Loaded cached daily goals for today");
+                // Will be used when the UI is ready
+            }
+        }
+        
+        // Update cache status after loading
+        new Handler(Looper.getMainLooper()).postDelayed(() -> updateCacheStatus(), 1000);
+    }
+    
+    // Cache management utility methods
+    
+    /**
+     * Clear all caches - useful for troubleshooting or user logout
+     */
+    public void clearAllCaches() {
+        if (cacheManager != null) {
+            cacheManager.clearAllCaches();
+            System.out.println("DEBUG: All caches cleared");
+        }
+    }
+    
+    /**
+     * Get cache information for debugging
+     */
+    public String getCacheInfo() {
+        if (cacheManager != null) {
+            return cacheManager.getCacheInfo();
+        }
+        return "Cache manager not initialized";
+    }
+    
+    /**
+     * Update streak data and cache it
+     */
+    public void updateStreakData(int newCurrentStreak, int newLongestStreak) {
+        currentStreak = newCurrentStreak;
+        longestStreak = newLongestStreak;
+        
+        // Cache the updated streak data
+        if (cacheManager != null) {
+            cacheManager.cacheStreakData(currentStreak, longestStreak);
+        }
+        
+        // Update UI
+        runOnUiThread(() -> {
+            currentStreakText.setText(String.valueOf(currentStreak));
+            longestStreakText.setText(String.valueOf(longestStreak));
+        });
+        
+        System.out.println("DEBUG: Updated and cached streak data - Current: " + currentStreak + 
+                         ", Longest: " + longestStreak);
+    }
+    
+    /**
+     * Force refresh all cached data
+     */
+    public void refreshAllCaches() {
+        if (cacheManager != null) {
+            cacheManager.clearAllCaches();
+            System.out.println("DEBUG: Refreshing all caches");
+            
+            // Trigger fresh data fetch
+            fetchDailyGoalsFromAPI();
+            
+            // Update cache status
+            updateCacheStatus();
+            
+            // You can add other data refresh calls here
+            // For example, refresh user stats, submission calendar, etc.
+        }
+    }
+    
+    /**
+     * Update cache status display
+     */
+    private void updateCacheStatus() {
+        if (cacheManager != null && cacheStatusText != null) {
+            runOnUiThread(() -> {
+                String cacheInfo = cacheManager.getCacheInfo();
+                boolean dailyGoalsValid = cacheManager.isCacheValid("daily_goals");
+                
+                String status = "Cache: " + cacheInfo;
+                if (dailyGoalsValid) {
+                    status += " • Goals cached ✓";
+                } else {
+                    status += " • Goals expired";
+                }
+                
+                cacheStatusText.setText(status);
+            });
+        }
+    }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // Handle new intent when activity is brought to front
+        setIntent(intent);
+        
+        // Always reset navigation to home when returning to main activity
+        // This includes both explicit navigation and implicit returns
+        selectNavItem(0);
+        
+        // Check if theme settings should be shown
+        if (intent.getBooleanExtra("show_theme_settings", false)) {
+            if (themeToggleContainer != null) {
+                themeToggleContainer.requestFocus();
+            }
+        }
+        
+        // Check if we're navigating to home explicitly
+        if (intent.getBooleanExtra("navigate_to_home", false)) {
+            // Scroll to top of main content if needed
+            if (mainContentContainer != null) {
+                mainContentContainer.smoothScrollTo(0, 0);
+            }
+        }
+    }
+    
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
+    
+    // Notification management methods
+    public void toggleNotifications(boolean enabled) {
+        NotificationScheduler.setNotificationsEnabled(this, enabled);
+        
+        if (enabled) {
+            // Show a test notification to confirm it's working
+            NotificationHelper.showDailyProblemNotification(this, true);
+        }
+    }
+    
+    public void setNotificationTimes(int morningHour, int morningMinute, int eveningHour, int eveningMinute) {
+        NotificationScheduler.setMorningTime(this, morningHour, morningMinute);
+        NotificationScheduler.setEveningTime(this, eveningHour, eveningMinute);
+    }
+    
+    public boolean areNotificationsEnabled() {
+        return NotificationScheduler.areNotificationsEnabled(this);
+    }
+    
+    public void showTestNotification() {
+        NotificationHelper.showDailyProblemNotification(this, true);
     }
 }
