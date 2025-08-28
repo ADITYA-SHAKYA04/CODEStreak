@@ -3,6 +3,8 @@ package com.example.codestreak;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.LinearLayout;
@@ -40,6 +42,8 @@ public class ProblemDetailActivity extends BaseActivity {
     private TextView hintsTitle;
     private ProgressBar loadingIndicator;
     private ScrollView contentContainer;
+    private ViewStub skeletonStub;
+    private View skeletonView;
     
     private String titleSlug;
     private OkHttpClient client;
@@ -80,6 +84,7 @@ public class ProblemDetailActivity extends BaseActivity {
         hintsTitle = findViewById(R.id.hintsTitle);
         loadingIndicator = findViewById(R.id.loadingIndicator);
         contentContainer = findViewById(R.id.contentContainer);
+        skeletonStub = findViewById(R.id.skeletonStub);
     }
     
     private void initializeHttpClient() {
@@ -108,6 +113,9 @@ public class ProblemDetailActivity extends BaseActivity {
     
     private void fetchProblemDetails() {
         showLoading(true);
+        
+        // Show immediate placeholder content while loading
+        showPlaceholderContent();
         
         // Add logging for debugging
         android.util.Log.d("ProblemDetail", "Fetching details for titleSlug: " + titleSlug);
@@ -267,7 +275,8 @@ public class ProblemDetailActivity extends BaseActivity {
                 
                 // Use extracted examples if available, otherwise fall back to exampleTestcases
                 if (!sections.examples.isEmpty()) {
-                    exampleInput.setText(sections.examples);
+                    android.util.Log.d("ProblemDetail", "Using content examples: " + sections.examples.substring(0, Math.min(100, sections.examples.length())) + "...");
+                    exampleInput.setText(formatContentExamples(sections.examples));
                 } else if (question.has("exampleTestcases") && !question.get("exampleTestcases").isJsonNull()) {
                     String examples = question.get("exampleTestcases").getAsString();
                     android.util.Log.d("ProblemDetail", "Using exampleTestcases: " + examples);
@@ -411,53 +420,117 @@ public class ProblemDetailActivity extends BaseActivity {
     private ContentSections extractContentSections(String content) {
         ContentSections sections = new ContentSections();
         
-        // Split content by common section patterns
-        String[] lines = content.split("\n");
-        StringBuilder currentSection = new StringBuilder();
-        String currentSectionType = "description";
+        // First, try to split content at the first example
+        String[] parts = content.split("(?i)(?=example\\s*\\d*\\s*:)", 2);
         
-        for (String line : lines) {
-            String lowerLine = line.toLowerCase().trim();
+        if (parts.length >= 2) {
+            // We found examples - part[0] is description, part[1] onwards are examples
+            sections.description = parts[0].trim();
             
-            // Check if this line starts a new section
-            if (lowerLine.startsWith("example") && (lowerLine.contains(":") || lowerLine.matches("example\\s+\\d+"))) {
-                // Save previous section
-                saveSectionContent(sections, currentSectionType, currentSection.toString().trim());
-                currentSection = new StringBuilder();
-                currentSectionType = "examples";
-                currentSection.append(line).append("\n");
+            // Extract examples and constraints from the remaining content
+            String remainingContent = parts[1];
+            String[] exampleConstraintSplit = remainingContent.split("(?i)(?=constraints?\\s*:)", 2);
+            
+            sections.examples = exampleConstraintSplit[0].trim();
+            if (exampleConstraintSplit.length > 1) {
+                sections.constraints = exampleConstraintSplit[1].trim();
             }
-            else if (lowerLine.startsWith("input:") || lowerLine.startsWith("output:")) {
-                // Continue with examples section
-                currentSection.append(line).append("\n");
+        } else {
+            // No clear example section found, try alternative approach
+            String[] lines = content.split("\n");
+            StringBuilder currentSection = new StringBuilder();
+            String currentSectionType = "description";
+            boolean foundFirstExample = false;
+            
+            for (String line : lines) {
+                String lowerLine = line.toLowerCase().trim();
+                
+                // Check if this line starts a new section
+                if (!foundFirstExample && (lowerLine.matches(".*example\\s*\\d*\\s*:.*") || 
+                    (lowerLine.startsWith("example") && lowerLine.contains(":")))) {
+                    // First example found - save description and start examples
+                    sections.description = currentSection.toString().trim();
+                    currentSection = new StringBuilder();
+                    currentSectionType = "examples";
+                    foundFirstExample = true;
+                    currentSection.append(line).append("\n");
+                }
+                else if (foundFirstExample && (lowerLine.startsWith("input:") || lowerLine.startsWith("output:") || lowerLine.startsWith("explanation:"))) {
+                    // Continue with examples section
+                    currentSection.append(line).append("\n");
+                }
+                else if (lowerLine.startsWith("constraints:") || lowerLine.startsWith("constraint:")) {
+                    // Save previous section and start constraints
+                    if (currentSectionType.equals("description")) {
+                        sections.description = currentSection.toString().trim();
+                    } else if (currentSectionType.equals("examples")) {
+                        sections.examples = currentSection.toString().trim();
+                    }
+                    currentSection = new StringBuilder();
+                    currentSectionType = "constraints";
+                    currentSection.append(line).append("\n");
+                }
+                else if (lowerLine.startsWith("note:") || lowerLine.startsWith("follow") || lowerLine.startsWith("hint:")) {
+                    // Save previous section and add to constraints
+                    if (currentSectionType.equals("description")) {
+                        sections.description = currentSection.toString().trim();
+                    } else if (currentSectionType.equals("examples")) {
+                        sections.examples = currentSection.toString().trim();
+                    }
+                    currentSection = new StringBuilder();
+                    currentSectionType = "constraints";
+                    currentSection.append(line).append("\n");
+                }
+                else {
+                    // Continue with current section
+                    currentSection.append(line).append("\n");
+                }
             }
-            else if (lowerLine.startsWith("constraints:") || lowerLine.startsWith("constraint:")) {
-                // Save previous section
-                saveSectionContent(sections, currentSectionType, currentSection.toString().trim());
-                currentSection = new StringBuilder();
-                currentSectionType = "constraints";
-                currentSection.append(line).append("\n");
-            }
-            else if (lowerLine.startsWith("note:") || lowerLine.startsWith("follow") || lowerLine.startsWith("hint:")) {
-                // Save previous section
-                saveSectionContent(sections, currentSectionType, currentSection.toString().trim());
-                currentSection = new StringBuilder();
-                currentSectionType = "constraints";
-                currentSection.append(line).append("\n");
-            }
-            else {
-                // Continue with current section
-                currentSection.append(line).append("\n");
+            
+            // Save the last section
+            if (currentSectionType.equals("description") && sections.description.isEmpty()) {
+                sections.description = currentSection.toString().trim();
+            } else if (currentSectionType.equals("examples") && sections.examples.isEmpty()) {
+                sections.examples = currentSection.toString().trim();
+            } else if (currentSectionType.equals("constraints")) {
+                sections.constraints = currentSection.toString().trim();
             }
         }
-        
-        // Save the last section
-        saveSectionContent(sections, currentSectionType, currentSection.toString().trim());
         
         // Clean up sections
         sections.description = cleanDescriptionText(sections.description);
         sections.examples = cleanExamplesText(sections.examples);
         sections.constraints = cleanConstraintsText(sections.constraints);
+        
+        // Safety check: if description is empty or too short, try to preserve original content
+        if (sections.description.isEmpty() || sections.description.length() < 50) {
+            android.util.Log.w("ProblemDetail", "Description too short, using fallback");
+            // Take the first meaningful part of the content as description
+            String[] contentLines = content.split("\n");
+            StringBuilder fallbackDescription = new StringBuilder();
+            int lineCount = 0;
+            
+            for (String line : contentLines) {
+                String trimmedLine = line.trim();
+                if (!trimmedLine.isEmpty() && lineCount < 20) { // Take first 20 non-empty lines
+                    String lowerLine = trimmedLine.toLowerCase();
+                    // Skip obvious example/constraint headers
+                    if (!lowerLine.startsWith("example ") && 
+                        !lowerLine.equals("input:") && 
+                        !lowerLine.equals("output:") &&
+                        !lowerLine.startsWith("constraints:")) {
+                        fallbackDescription.append(trimmedLine).append("\n");
+                        lineCount++;
+                    }
+                }
+            }
+            
+            if (fallbackDescription.length() > 0) {
+                sections.description = cleanHtmlEntities(fallbackDescription.toString().trim());
+            } else {
+                sections.description = "Problem description not available";
+            }
+        }
         
         // If no examples were found in content, leave it empty to use exampleTestcases
         if (sections.examples.isEmpty()) {
@@ -499,21 +572,53 @@ public class ProblemDetailActivity extends BaseActivity {
     private String cleanDescriptionText(String text) {
         if (text.isEmpty()) return "Problem description not available";
         
-        // Remove example sections that might have leaked into description
-        String[] examplePatterns = {
-            "(?i)example\\s+\\d+:.*",
-            "(?i)input:.*",
-            "(?i)output:.*"
-        };
+        // Remove any example sections that leaked into description
+        String[] lines = text.split("\n");
+        StringBuilder cleanedText = new StringBuilder();
+        boolean skipMode = false;
         
-        for (String pattern : examplePatterns) {
-            text = text.replaceAll(pattern, "").trim();
+        for (String line : lines) {
+            String lowerLine = line.toLowerCase().trim();
+            
+            // Start skipping when we hit an example
+            if (lowerLine.matches(".*example\\s*\\d*\\s*:.*") || 
+                (lowerLine.startsWith("example") && lowerLine.contains(":"))) {
+                skipMode = true;
+                continue;
+            }
+            
+            // Skip input/output/explanation lines that are part of examples
+            if (skipMode && (lowerLine.startsWith("input:") || lowerLine.startsWith("output:") || lowerLine.startsWith("explanation:"))) {
+                continue;
+            }
+            
+            // If we're in skip mode and hit constraints, stop skipping but don't include constraints in description
+            if (skipMode && (lowerLine.startsWith("constraints:") || lowerLine.startsWith("constraint:"))) {
+                break;
+            }
+            
+            // If we're not in skip mode, include the line
+            if (!skipMode) {
+                cleanedText.append(line).append("\n");
+            }
+        }
+        
+        String result = cleanedText.toString().trim();
+        
+        // If we removed too much and have very little content left, be more conservative
+        if (result.length() < 50 && text.length() > 100) {
+            // Try a more conservative approach - just remove clear example markers
+            result = text.replaceAll("(?i)example\\s+\\d+:", "")
+                        .replaceAll("(?i)^input:", "")
+                        .replaceAll("(?i)^output:", "")
+                        .replaceAll("(?i)^explanation:", "")
+                        .trim();
         }
         
         // Additional cleanup for any remaining HTML entities
-        text = cleanHtmlEntities(text);
+        result = cleanHtmlEntities(result);
         
-        return text.replaceAll("\n{3,}", "\n\n").trim();
+        return result.replaceAll("\n{3,}", "\n\n").trim();
     }
     
     private String cleanExamplesText(String text) {
@@ -565,20 +670,202 @@ public class ProblemDetailActivity extends BaseActivity {
         // Clean HTML entities first
         examples = cleanHtmlEntities(examples);
         
-        String[] testCases = examples.split("\\n");
+        // Check if this looks like the LeetCode exampleTestcases format (input data only)
+        if (!examples.contains("Example") && !examples.contains("Input:") && !examples.contains("Output:")) {
+            return formatExampleTestcases(examples);
+        }
+        
+        // If it already contains formatted examples, just clean it up
+        return examples.replaceAll("\\n{3,}", "\n\n").trim();
+    }
+    
+    private String formatExampleTestcases(String testCasesData) {
+        // The exampleTestcases field usually contains just the input data separated by newlines
+        // We need to parse this and create proper example format
+        android.util.Log.d("ProblemDetail", "formatExampleTestcases input: " + testCasesData);
+        
+        String[] lines = testCasesData.split("\\n");
         StringBuilder formatted = new StringBuilder();
         
-        for (int i = 0; i < testCases.length; i++) {
-            if (i % 2 == 0) {
-                formatted.append("Example ").append((i / 2) + 1).append(":\n");
-                formatted.append("Input: ").append(testCases[i].trim()).append("\n");
-                if (i + 1 < testCases.length) {
-                    formatted.append("Output: ").append(testCases[i + 1].trim()).append("\n\n");
+        // Group the test case inputs - LeetCode usually provides inputs in groups
+        // For problems like "Two Sum", it might be: [2,7,11,15], 9, [3,2,4], 6
+        
+        int exampleNumber = 1;
+        int i = 0;
+        
+        while (i < lines.length && exampleNumber <= 5) { // Limit to 5 examples
+            String currentLine = lines[i].trim();
+            
+            if (currentLine.isEmpty()) {
+                i++;
+                continue;
+            }
+            
+            formatted.append("Example ").append(exampleNumber).append(":\n");
+            
+            // Try to determine the input format based on the problem
+            String input = currentLine;
+            
+            // Handle different input patterns
+            if (input.startsWith("[") && input.endsWith("]")) {
+                // Array input
+                formatted.append("Input: ").append(input);
+                
+                // Check if next line is another parameter (like target value)
+                if (i + 1 < lines.length) {
+                    String nextLine = lines[i + 1].trim();
+                    if (!nextLine.isEmpty() && !nextLine.startsWith("[")) {
+                        // This looks like a second parameter
+                        formatted.append(", ").append(nextLine);
+                        i++; // Skip the next line as we've consumed it
+                    }
+                }
+            } else if (input.startsWith("\"") && input.endsWith("\"")) {
+                // String input
+                formatted.append("Input: ").append(input);
+            } else if (input.matches("\\d+")) {
+                // Numeric input
+                formatted.append("Input: ").append(input);
+            } else {
+                // Generic input
+                formatted.append("Input: ").append(input);
+            }
+            
+            formatted.append("\n");
+            formatted.append("Output: [Expected output - see problem description]\n\n");
+            
+            i++;
+            exampleNumber++;
+        }
+        
+        // If we only found one example, try to parse it differently
+        if (exampleNumber == 2 && lines.length > 2) {
+            // Maybe the format is different - try parsing pairs of lines
+            formatted = new StringBuilder();
+            exampleNumber = 1;
+            
+            for (int j = 0; j < Math.min(lines.length, 8); j += 2) {
+                if (j + 1 < lines.length && !lines[j].trim().isEmpty()) {
+                    formatted.append("Example ").append(exampleNumber).append(":\n");
+                    formatted.append("Input: ").append(lines[j].trim());
+                    
+                    if (!lines[j + 1].trim().isEmpty()) {
+                        formatted.append(", ").append(lines[j + 1].trim());
+                    }
+                    
+                    formatted.append("\n");
+                    formatted.append("Output: [Expected output - see problem description]\n\n");
+                    exampleNumber++;
                 }
             }
         }
         
-        return formatted.toString().trim();
+        String result = formatted.toString().trim();
+        android.util.Log.d("ProblemDetail", "formatExampleTestcases result: " + result);
+        return result.isEmpty() ? "No test cases found" : result;
+    }
+    
+    private String formatContentExamples(String contentExamples) {
+        // This handles examples extracted from the problem content itself
+        android.util.Log.d("ProblemDetail", "formatContentExamples input: " + contentExamples);
+        
+        if (contentExamples == null || contentExamples.trim().isEmpty()) {
+            return "No examples found in content";
+        }
+        
+        // Split by different example patterns
+        String[] sections = contentExamples.split("(?i)example\\s*\\d*\\s*:");
+        android.util.Log.d("ProblemDetail", "Split into " + sections.length + " sections");
+        
+        StringBuilder formatted = new StringBuilder();
+        int exampleCount = 0;
+        
+        for (int i = 0; i < sections.length; i++) {
+            String section = sections[i].trim();
+            
+            // Skip empty sections
+            if (section.isEmpty()) continue;
+            
+            // Check if this section contains input/output patterns
+            if (section.toLowerCase().contains("input:") || section.toLowerCase().contains("output:")) {
+                exampleCount++;
+                formatted.append("Example ").append(exampleCount).append(":\n");
+                
+                // Parse input/output from the section
+                String[] lines = section.split("\n");
+                
+                for (String line : lines) {
+                    line = line.trim();
+                    if (!line.isEmpty()) {
+                        String lowerLine = line.toLowerCase();
+                        if (lowerLine.startsWith("input:") || 
+                            lowerLine.startsWith("output:") ||
+                            lowerLine.startsWith("explanation:")) {
+                            formatted.append(line).append("\n");
+                        } else if (!lowerLine.startsWith("example") && !lowerLine.startsWith("constraint")) {
+                            // This might be a continuation of previous line or example data
+                            formatted.append(line).append("\n");
+                        }
+                    }
+                }
+                
+                formatted.append("\n");
+            } else if (i > 0) {
+                // If we found a section after splitting by "Example" but it doesn't have input/output,
+                // it might still contain example data, so include it
+                exampleCount++;
+                formatted.append("Example ").append(exampleCount).append(":\n");
+                formatted.append(section).append("\n\n");
+            }
+        }
+        
+        // If no proper examples found, try alternative parsing
+        if (exampleCount == 0) {
+            android.util.Log.d("ProblemDetail", "No examples found with standard parsing, trying alternative");
+            
+            // Look for Input: and Output: patterns directly
+            String[] lines = contentExamples.split("\n");
+            StringBuilder currentExample = new StringBuilder();
+            boolean inExample = false;
+            exampleCount = 0;
+            
+            for (String line : lines) {
+                String trimmedLine = line.trim();
+                String lowerLine = trimmedLine.toLowerCase();
+                
+                if (lowerLine.startsWith("input:")) {
+                    if (inExample && currentExample.length() > 0) {
+                        // Save previous example
+                        exampleCount++;
+                        formatted.append("Example ").append(exampleCount).append(":\n");
+                        formatted.append(currentExample.toString()).append("\n");
+                        currentExample = new StringBuilder();
+                    }
+                    inExample = true;
+                    currentExample.append(trimmedLine).append("\n");
+                } else if (lowerLine.startsWith("output:") || lowerLine.startsWith("explanation:")) {
+                    if (inExample) {
+                        currentExample.append(trimmedLine).append("\n");
+                    }
+                } else if (inExample && !trimmedLine.isEmpty() && 
+                          !lowerLine.startsWith("constraint") && 
+                          !lowerLine.startsWith("note:")) {
+                    // Continuation line
+                    currentExample.append(trimmedLine).append("\n");
+                }
+            }
+            
+            // Add the last example
+            if (inExample && currentExample.length() > 0) {
+                exampleCount++;
+                formatted.append("Example ").append(exampleCount).append(":\n");
+                formatted.append(currentExample.toString()).append("\n");
+            }
+        }
+        
+        String result = formatted.toString().trim();
+        android.util.Log.d("ProblemDetail", "formatContentExamples result: " + result);
+        return result.isEmpty() ? "Examples parsing failed" : result;
     }
     
     private void displayTopicTags(JsonArray topicTags) {
@@ -647,14 +934,103 @@ public class ProblemDetailActivity extends BaseActivity {
     }
     
     private void showLoading(boolean show) {
-        loadingIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
-        contentContainer.setVisibility(show ? View.GONE : View.VISIBLE);
+        if (show) {
+            // Show skeleton loading
+            if (skeletonView == null && skeletonStub != null) {
+                skeletonView = skeletonStub.inflate();
+                
+                // Start shimmer animation for all skeleton views
+                startSkeletonAnimation(skeletonView);
+            }
+            
+            loadingIndicator.setVisibility(View.GONE); // Hide progress bar, use skeleton instead
+            contentContainer.setVisibility(View.GONE);
+            if (skeletonView != null) {
+                skeletonView.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // Hide skeleton and show content
+            loadingIndicator.setVisibility(View.GONE);
+            contentContainer.setVisibility(View.VISIBLE);
+            if (skeletonView != null) {
+                skeletonView.setVisibility(View.GONE);
+                stopSkeletonAnimation(skeletonView);
+            }
+        }
+    }
+    
+    private void startSkeletonAnimation(View parent) {
+        if (parent instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) parent;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                if (child instanceof ViewGroup) {
+                    startSkeletonAnimation(child);
+                } else {
+                    // Apply shimmer animation to skeleton elements
+                    if (child.getBackground() != null) {
+                        android.view.animation.Animation shimmer = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.skeleton_shimmer);
+                        child.startAnimation(shimmer);
+                    }
+                }
+            }
+        }
+    }
+    
+    private void stopSkeletonAnimation(View parent) {
+        if (parent instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) parent;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                if (child instanceof ViewGroup) {
+                    stopSkeletonAnimation(child);
+                } else {
+                    child.clearAnimation();
+                }
+            }
+        }
     }
     
     private void showError(String message) {
         problemDescription.setText("Error: " + message);
         exampleInput.setText("Unable to load examples");
         constraints.setText("Unable to load constraints");
+    }
+    
+    private void showPlaceholderContent() {
+        // Show immediate placeholder content from intent data while skeleton loads
+        Intent intent = getIntent();
+        String title = intent.getStringExtra("problem_title");
+        String difficulty = intent.getStringExtra("problem_difficulty");
+        
+        if (title != null && !title.isEmpty()) {
+            problemTitle.setText(title);
+        }
+        
+        if (difficulty != null && !difficulty.isEmpty()) {
+            difficultyBadge.setText(difficulty);
+            // Set difficulty badge background based on difficulty level
+            switch (difficulty.toLowerCase()) {
+                case "easy":
+                    difficultyBadge.setBackground(ContextCompat.getDrawable(this, R.drawable.difficulty_badge_easy));
+                    break;
+                case "medium":
+                    difficultyBadge.setBackground(ContextCompat.getDrawable(this, R.drawable.difficulty_badge_medium));
+                    break;
+                case "hard":
+                    difficultyBadge.setBackground(ContextCompat.getDrawable(this, R.drawable.difficulty_badge_hard));
+                    break;
+                default:
+                    difficultyBadge.setBackground(ContextCompat.getDrawable(this, R.drawable.difficulty_badge_medium));
+                    break;
+            }
+        }
+        
+        // Show that content is loading
+        problemDescription.setText("Loading problem description...");
+        exampleInput.setText("Loading examples...");
+        constraints.setText("Loading constraints...");
+        acceptanceRate.setText("Loading stats...");
     }
     
     private void setupClickListeners() {

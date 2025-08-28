@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.view.GravityCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -57,6 +59,11 @@ public class ModernMainActivity extends BaseActivity {
     private TextView homeText, progressText, cardsText, revisionText;
     private View homeIndicator, progressIndicator, cardsIndicator, revisionIndicator;
     private com.google.android.material.card.MaterialCardView bottomNavCard;
+    
+    // Skeleton loading
+    private ViewStub skeletonStub;
+    private View skeletonView;
+    private androidx.core.widget.NestedScrollView mainContentContainer;
     private FrameLayout themeToggleContainer;
     private View toggleTrack, toggleThumb;
     private FrameLayout toggleThumbContainer;
@@ -134,6 +141,16 @@ public class ModernMainActivity extends BaseActivity {
         
         // Initialize SwipeRefreshLayout
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        
+        // Initialize skeleton loading
+        skeletonStub = findViewById(R.id.skeletonStub);
+        mainContentContainer = findViewById(R.id.nestedScrollView);
+        
+        // Ensure main content is visible by default
+        if (mainContentContainer != null) {
+            mainContentContainer.setVisibility(View.VISIBLE);
+        }
+        
         setupSwipeRefresh();
         
         initializeCustomBottomNavigation();
@@ -224,13 +241,16 @@ public class ModernMainActivity extends BaseActivity {
         swipeRefreshLayout.setOnRefreshListener(() -> {
             System.out.println("DEBUG: Pull-to-refresh triggered - refreshing daily goals");
             
+            // Show skeleton loading during refresh
+            showRefreshSkeleton(true);
+            
             // Add shadow animation during refresh
             animateRefreshShadow(true);
             
             // Update the title with current date
             updateTodaysGoalTitle();
             
-            // Clear current goals and show loading
+            // Clear current goals and show loading message (will be replaced by skeleton)
             List<DailyGoal> loadingGoals = new ArrayList<>();
             loadingGoals.add(new DailyGoal("Refreshing daily goals...", "Please wait", "Easy", false));
             updateGoalsAdapter(loadingGoals);
@@ -243,11 +263,13 @@ public class ModernMainActivity extends BaseActivity {
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);
+                    // Hide skeleton and show content
+                    showRefreshSkeleton(false);
                     // Remove shadow animation after refresh
                     animateRefreshShadow(false);
                     System.out.println("DEBUG: Pull-to-refresh completed");
                 }
-            }, 3000); // 3 seconds delay to allow API calls to complete
+            }, 2000); // Reduced to 2 seconds for better UX
         });
     }
     
@@ -1922,5 +1944,70 @@ public class ModernMainActivity extends BaseActivity {
         public String getCategory() { return category; }
         public String getDifficulty() { return difficulty; }
         public boolean isCompleted() { return completed; }
+    }
+    
+    private void showRefreshSkeleton(boolean show) {
+        if (show) {
+            // Show skeleton loading during refresh
+            if (skeletonView == null && skeletonStub != null) {
+                try {
+                    skeletonView = skeletonStub.inflate();
+                    
+                    // Start shimmer animation for all skeleton views
+                    startRefreshSkeletonAnimation(skeletonView);
+                } catch (Exception e) {
+                    android.util.Log.e("ModernMainActivity", "Failed to inflate skeleton", e);
+                    return;
+                }
+            }
+            
+            if (mainContentContainer != null) {
+                mainContentContainer.setVisibility(View.INVISIBLE); // Use INVISIBLE instead of GONE to maintain layout
+            }
+            if (skeletonView != null) {
+                skeletonView.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // Hide skeleton and show content
+            if (skeletonView != null) {
+                skeletonView.setVisibility(View.GONE);
+                stopRefreshSkeletonAnimation(skeletonView);
+            }
+            if (mainContentContainer != null) {
+                mainContentContainer.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+    
+    private void startRefreshSkeletonAnimation(View parent) {
+        if (parent instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) parent;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                if (child instanceof ViewGroup) {
+                    startRefreshSkeletonAnimation(child);
+                } else {
+                    // Apply shimmer animation to skeleton elements
+                    if (child.getBackground() != null) {
+                        android.view.animation.Animation shimmer = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.skeleton_shimmer);
+                        child.startAnimation(shimmer);
+                    }
+                }
+            }
+        }
+    }
+    
+    private void stopRefreshSkeletonAnimation(View parent) {
+        if (parent instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) parent;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                if (child instanceof ViewGroup) {
+                    stopRefreshSkeletonAnimation(child);
+                } else {
+                    child.clearAnimation();
+                }
+            }
+        }
     }
 }

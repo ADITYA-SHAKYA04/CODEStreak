@@ -9,6 +9,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -42,6 +43,11 @@ public class ProblemsActivity extends BaseActivity {
     private LinearLayout filterTopicsButton;
     private TextView sortButton; // Changed from LinearLayout to TextView
     private TextView sortText; // Can be removed as we're using sortButton for both
+    
+    // Skeleton loading
+    private ViewStub skeletonStub;
+    private View skeletonView;
+    private LinearLayout contentContainer;
     
     private ProblemsAdapter problemsAdapter;
     
@@ -85,6 +91,10 @@ public class ProblemsActivity extends BaseActivity {
         filterTopicsButton = findViewById(R.id.filterTopicsButton);
         sortButton = findViewById(R.id.sortButton);
         sortText = sortButton; // Use the same TextView for both
+        
+        // Initialize skeleton loading
+        skeletonStub = findViewById(R.id.skeletonStub);
+        contentContainer = findViewById(R.id.contentContainer);
         
         // Setup filter topics button
         filterTopicsButton.setOnClickListener(v -> showTopicSelectionDialog());
@@ -132,6 +142,9 @@ public class ProblemsActivity extends BaseActivity {
     }
     
     private void loadData() {
+        // Show skeleton loading immediately
+        showSkeletonLoading(true);
+        
         // Initialize HTTP client for API calls with optimized settings
         httpClient = new OkHttpClient.Builder()
                 .connectTimeout(5, TimeUnit.SECONDS)    // Reduced from 30s
@@ -230,6 +243,9 @@ public class ProblemsActivity extends BaseActivity {
         
         // Load first page immediately with static data for instant UI
         loadMoreProblems();
+        
+        // Hide skeleton loading once initial content is loaded
+        showSkeletonLoading(false);
         
         // Load real LeetCode problems in background (non-blocking)
         loadRealLeetCodeProblemsInBackground();
@@ -1891,5 +1907,65 @@ public class ProblemsActivity extends BaseActivity {
         navRevision.setOnClickListener(v -> {
             // TODO: Navigate to Revision activity when created
         });
+    }
+    
+    private void showSkeletonLoading(boolean show) {
+        if (show) {
+            // Show skeleton loading
+            if (skeletonView == null && skeletonStub != null) {
+                skeletonView = skeletonStub.inflate();
+                
+                // Start shimmer animation for all skeleton views
+                startSkeletonAnimation(skeletonView);
+            }
+            
+            if (contentContainer != null) {
+                contentContainer.setVisibility(View.GONE);
+            }
+            if (skeletonView != null) {
+                skeletonView.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // Hide skeleton and show content
+            if (contentContainer != null) {
+                contentContainer.setVisibility(View.VISIBLE);
+            }
+            if (skeletonView != null) {
+                skeletonView.setVisibility(View.GONE);
+                stopSkeletonAnimation(skeletonView);
+            }
+        }
+    }
+    
+    private void startSkeletonAnimation(View parent) {
+        if (parent instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) parent;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                if (child instanceof ViewGroup) {
+                    startSkeletonAnimation(child);
+                } else {
+                    // Apply shimmer animation to skeleton elements
+                    if (child.getBackground() != null) {
+                        android.view.animation.Animation shimmer = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.skeleton_shimmer);
+                        child.startAnimation(shimmer);
+                    }
+                }
+            }
+        }
+    }
+    
+    private void stopSkeletonAnimation(View parent) {
+        if (parent instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) parent;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                if (child instanceof ViewGroup) {
+                    stopSkeletonAnimation(child);
+                } else {
+                    child.clearAnimation();
+                }
+            }
+        }
     }
 }

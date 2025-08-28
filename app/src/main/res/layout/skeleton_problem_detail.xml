@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-compat"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Problem Title Skeleton -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Title skeleton -->
+                <View
+                    android:layout_width="280dp"
+                    android:layout_height="24dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <!-- Difficulty and stats skeleton -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <View
+                        android:layout_width="60dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/skeleton_background" />
+
+                    <View
+                        android:layout_width="100dp"
+                        android:layout_height="20dp"
+                        android:background="@drawable/skeleton_background" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Topic Tags Skeleton -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="80dp"
+                    android:layout_height="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="60dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/skeleton_chip_background" />
+
+                    <View
+                        android:layout_width="80dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/skeleton_chip_background" />
+
+                    <View
+                        android:layout_width="70dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/skeleton_chip_background" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Description Skeleton -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="120dp"
+                    android:layout_height="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <!-- Description lines -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="320dp"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="280dp"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="220dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Examples Skeleton -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="80dp"
+                    android:layout_height="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <!-- Example content -->
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="180dp"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="160dp"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="190dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Constraints Skeleton -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="220dp"
+                    android:layout_height="16dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="200dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</ScrollView>

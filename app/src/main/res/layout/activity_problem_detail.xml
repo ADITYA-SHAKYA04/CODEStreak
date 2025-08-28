@@ -13,6 +13,13 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
+    <!-- Skeleton Loading -->
+    <ViewStub
+        android:id="@+id/skeletonStub"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout="@layout/skeleton_problem_detail" />
+
     <!-- Content Container -->
     <ScrollView
         android:id="@+id/contentContainer"

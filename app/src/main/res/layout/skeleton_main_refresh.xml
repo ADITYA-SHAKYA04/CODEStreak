@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header Skeleton -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <View
+                android:layout_width="150dp"
+                android:layout_height="28dp"
+                android:layout_weight="1"
+                android:background="@drawable/skeleton_background" />
+
+            <View
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/skeleton_background" />
+
+        </LinearLayout>
+
+        <!-- Stats Cards Skeleton -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <!-- Card 1 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/problem_card_background"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:gravity="center">
+
+                <View
+                    android:layout_width="40dp"
+                    android:layout_height="20dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+            <!-- Card 2 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/problem_card_background"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:gravity="center">
+
+                <View
+                    android:layout_width="40dp"
+                    android:layout_height="20dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="70dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Progress Card Skeleton -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/problem_card_background"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="24dp">
+
+            <View
+                android:layout_width="120dp"
+                android:layout_height="20dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/skeleton_background" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/skeleton_chip_background" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="80dp"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Daily Goals Section Skeleton -->
+        <View
+            android:layout_width="100dp"
+            android:layout_height="20dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/skeleton_background" />
+
+        <!-- Goal Item 1 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/problem_card_background"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="180dp"
+                    android:layout_height="18dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="140dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="60dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/skeleton_chip_background" />
+
+        </LinearLayout>
+
+        <!-- Goal Item 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/problem_card_background"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="200dp"
+                    android:layout_height="18dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="160dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="60dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/skeleton_chip_background" />
+
+        </LinearLayout>
+
+        <!-- Goal Item 3 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/problem_card_background"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="220dp"
+                    android:layout_height="18dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="120dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/skeleton_background" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="60dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/skeleton_chip_background" />
+
+        </LinearLayout>
+
+        <!-- Trending Section Skeleton -->
+        <View
+            android:layout_width="120dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/skeleton_background" />
+
+        <!-- Trending Problem Item -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/problem_card_background"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <View
+                    android:layout_width="200dp"
+                    android:layout_height="18dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/skeleton_background" />
+
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/skeleton_chip_background" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="50dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/skeleton_chip_background" />
+
+                <View
+                    android:layout_width="70dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/skeleton_chip_background" />
+
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/skeleton_chip_background" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
