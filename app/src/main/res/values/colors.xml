@@ -133,4 +133,14 @@
     <!-- Bottom Navigation Colors -->
     <color name="bottom_nav_selected">#BB86FC</color>
     <color name="bottom_nav_unselected">#808080</color>
+    
+    <!-- Code colors -->
+    <color name="code_background_color">#F8F9FA</color>
+    <color name="code_border_color">#E9ECEF</color>
+    <color name="code_text">#495057</color>
+    <color name="code_keyword">#007BFF</color>
+    
+    <!-- Chip colors -->
+    <color name="chip_background">#E3F2FD</color>
+    <color name="chip_text">#1976D2</color>
 </resources>
