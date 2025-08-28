@@ -43,6 +43,7 @@ public class ProblemsActivity extends BaseActivity {
     private LinearLayout filterTopicsButton;
     private TextView sortButton; // Changed from LinearLayout to TextView
     private TextView sortText; // Can be removed as we're using sortButton for both
+    private com.google.android.material.card.MaterialCardView bottomNavCard;
     
     // Skeleton loading
     private ViewStub skeletonStub;
@@ -76,6 +77,9 @@ public class ProblemsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_problems);
         
+        // Apply theme-based styling
+        applyTheme();
+        
         initViews();
         setupRecyclerViews();
         loadData();
@@ -91,10 +95,24 @@ public class ProblemsActivity extends BaseActivity {
         filterTopicsButton = findViewById(R.id.filterTopicsButton);
         sortButton = findViewById(R.id.sortButton);
         sortText = sortButton; // Use the same TextView for both
+        bottomNavCard = findViewById(R.id.bottomNavCard);
         
         // Initialize skeleton loading
         skeletonStub = findViewById(R.id.skeletonStub);
         contentContainer = findViewById(R.id.contentContainer);
+        
+        // Ensure bottom navigation stays fixed at bottom and is visible
+        if (bottomNavCard != null) {
+            bottomNavCard.setVisibility(View.VISIBLE);
+            bottomNavCard.bringToFront();
+            bottomNavCard.setTranslationZ(100f); // Ensure it's above other views
+            
+            // Post a runnable to ensure layout is complete before positioning
+            bottomNavCard.post(() -> {
+                bottomNavCard.bringToFront();
+                bottomNavCard.setTranslationZ(100f);
+            });
+        }
         
         // Setup filter topics button
         filterTopicsButton.setOnClickListener(v -> showTopicSelectionDialog());
@@ -1870,23 +1888,15 @@ public class ProblemsActivity extends BaseActivity {
     }
     
     private void setupBottomNavigation() {
+        // Define navigation colors
+        int activeColor = getColor(R.color.accent_secondary);
+        int inactiveColor = getColor(R.color.text_secondary);
+        
         // Get navigation elements
         LinearLayout navHome = findViewById(R.id.nav_home);
         LinearLayout navProgress = findViewById(R.id.nav_progress);
         LinearLayout navCards = findViewById(R.id.nav_cards);
         LinearLayout navRevision = findViewById(R.id.nav_revision);
-        
-        // Get indicators and set current active (Problems)
-        View homeIndicator = findViewById(R.id.home_indicator);
-        View progressIndicator = findViewById(R.id.progress_indicator);
-        View cardsIndicator = findViewById(R.id.cards_indicator);
-        View revisionIndicator = findViewById(R.id.revision_indicator);
-        
-        // Set Problems as active
-        progressIndicator.setVisibility(View.VISIBLE);
-        TextView progressText = findViewById(R.id.progress_text);
-        progressText.setTextColor(getResources().getColor(R.color.accent_secondary, getTheme()));
-        progressText.setTypeface(null, android.graphics.Typeface.BOLD);
         
         // Set click listeners
         navHome.setOnClickListener(v -> {
@@ -1908,6 +1918,104 @@ public class ProblemsActivity extends BaseActivity {
         navRevision.setOnClickListener(v -> {
             // TODO: Navigate to Revision activity when created
         });
+        
+        // Set Problems (Progress) as the selected item
+        selectNavItem(1);
+    }
+    
+    private void resetAllNavItems() {
+        int inactiveColor = getColor(R.color.text_secondary);
+        
+        // Hide all indicators
+        findViewById(R.id.home_indicator).setVisibility(View.GONE);
+        findViewById(R.id.progress_indicator).setVisibility(View.GONE);
+        findViewById(R.id.cards_indicator).setVisibility(View.GONE);
+        findViewById(R.id.revision_indicator).setVisibility(View.GONE);
+        
+        // Get all icons and text elements
+        ImageView homeIcon = findViewById(R.id.home_icon);
+        ImageView progressIcon = findViewById(R.id.progress_icon);
+        ImageView cardsIcon = findViewById(R.id.cards_icon);
+        ImageView revisionIcon = findViewById(R.id.revision_icon);
+        
+        TextView homeText = findViewById(R.id.home_text);
+        TextView progressText = findViewById(R.id.progress_text);
+        TextView cardsText = findViewById(R.id.cards_text);
+        TextView revisionText = findViewById(R.id.revision_text);
+        
+        // Reset all icons to inactive color
+        if (homeIcon != null) homeIcon.setColorFilter(inactiveColor);
+        if (progressIcon != null) progressIcon.setColorFilter(inactiveColor);
+        if (cardsIcon != null) cardsIcon.setColorFilter(inactiveColor);
+        if (revisionIcon != null) revisionIcon.setColorFilter(inactiveColor);
+        
+        // Reset all text to inactive color and normal weight
+        if (homeText != null) {
+            homeText.setTextColor(inactiveColor);
+            homeText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+        if (progressText != null) {
+            progressText.setTextColor(inactiveColor);
+            progressText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+        if (cardsText != null) {
+            cardsText.setTextColor(inactiveColor);
+            cardsText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+        if (revisionText != null) {
+            revisionText.setTextColor(inactiveColor);
+            revisionText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+    }
+    
+    private void selectNavItem(int index) {
+        // Reset all items to inactive state
+        resetAllNavItems();
+        
+        int activeColor = getColor(R.color.accent_secondary);
+        
+        switch (index) {
+            case 0: // Home
+                findViewById(R.id.home_indicator).setVisibility(View.VISIBLE);
+                ImageView homeIcon = findViewById(R.id.home_icon);
+                TextView homeText = findViewById(R.id.home_text);
+                if (homeIcon != null) homeIcon.setColorFilter(activeColor);
+                if (homeText != null) {
+                    homeText.setTextColor(activeColor);
+                    homeText.setTypeface(null, android.graphics.Typeface.BOLD);
+                }
+                break;
+            case 1: // Progress
+                findViewById(R.id.progress_indicator).setVisibility(View.VISIBLE);
+                ImageView progressIcon = findViewById(R.id.progress_icon);
+                TextView progressText = findViewById(R.id.progress_text);
+                if (progressIcon != null) progressIcon.setColorFilter(activeColor);
+                if (progressText != null) {
+                    progressText.setTextColor(activeColor);
+                    progressText.setTypeface(null, android.graphics.Typeface.BOLD);
+                }
+                break;
+            case 2: // Companies
+                findViewById(R.id.cards_indicator).setVisibility(View.VISIBLE);
+                ImageView cardsIcon = findViewById(R.id.cards_icon);
+                TextView cardsText = findViewById(R.id.cards_text);
+                if (cardsIcon != null) cardsIcon.setColorFilter(activeColor);
+                if (cardsText != null) {
+                    cardsText.setTextColor(activeColor);
+                    cardsText.setTypeface(null, android.graphics.Typeface.BOLD);
+                }
+                break;
+            case 3: // Revision
+                findViewById(R.id.revision_indicator).setVisibility(View.VISIBLE);
+                ImageView revisionIcon = findViewById(R.id.revision_icon);
+                TextView revisionText = findViewById(R.id.revision_text);
+                if (revisionIcon != null) revisionIcon.setColorFilter(activeColor);
+                if (revisionText != null) {
+                    revisionText.setTextColor(activeColor);
+                    revisionText.setTypeface(null, android.graphics.Typeface.BOLD);
+                }
+                break;
+        }
     }
     
     private void showSkeletonLoading(boolean show) {
@@ -1967,6 +2075,35 @@ public class ProblemsActivity extends BaseActivity {
                     child.clearAnimation();
                 }
             }
+        }
+    }
+    
+    private void applyTheme() {
+        // Get root view
+        View rootView = findViewById(android.R.id.content);
+        
+        if (isDarkTheme) {
+            // Apply dark theme colors
+            rootView.setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
+            
+            // Update bottom navigation card
+            if (bottomNavCard != null) {
+                bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.leetcode_card_bg, getTheme()));
+            }
+            
+        } else {
+            // Apply light theme colors  
+            rootView.setBackgroundColor(getResources().getColor(R.color.background_primary, getTheme()));
+            
+            // Update bottom navigation card
+            if (bottomNavCard != null) {
+                bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
+            }
+        }
+        
+        // Refresh RecyclerView to apply theme to items
+        if (problemsRecyclerView != null && problemsRecyclerView.getAdapter() != null) {
+            problemsRecyclerView.getAdapter().notifyDataSetChanged();
         }
     }
 }

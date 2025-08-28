@@ -465,18 +465,13 @@ public class ModernMainActivity extends BaseActivity {
     }
     
     private void applyTheme() {
-        // Apply proper Material Design theme
-        if (isDarkTheme) {
-            setTheme(androidx.appcompat.R.style.Theme_AppCompat_NoActionBar);
-        } else {
-            setTheme(androidx.appcompat.R.style.Theme_AppCompat_Light_NoActionBar);
-        }
-        
-        // Apply dynamic theme changes to views
+        // Apply dynamic theme changes to views (same approach as ProblemsActivity)
         updateViewColors();
         
-        // Recreate activity to apply theme properly
-        new Handler(Looper.getMainLooper()).postDelayed(this::recreate, 100);
+        // Refresh RecyclerView to apply theme to items (same as ProblemsActivity)
+        if (dailyGoalsRecyclerView != null && dailyGoalsRecyclerView.getAdapter() != null) {
+            dailyGoalsRecyclerView.getAdapter().notifyDataSetChanged();
+        }
     }
     
     private void updateViewColors() {
@@ -588,11 +583,11 @@ public class ModernMainActivity extends BaseActivity {
             }
             
         } else {
-            // Light theme colors
-            rootView.setBackgroundColor(getResources().getColor(R.color.modern_background, getTheme()));
+            // Light theme colors - match ProblemsActivity exactly
+            rootView.setBackgroundColor(getResources().getColor(R.color.background_primary, getTheme()));
             
             // Update drawer layout background
-            drawerLayout.setBackgroundColor(getResources().getColor(R.color.modern_background, getTheme()));
+            drawerLayout.setBackgroundColor(getResources().getColor(R.color.background_primary, getTheme()));
             
             // Update all major UI elements with light backgrounds
             findViewById(R.id.appBarLayout).setBackgroundColor(android.graphics.Color.TRANSPARENT);
@@ -624,7 +619,7 @@ public class ModernMainActivity extends BaseActivity {
             // This is the key fix - update the main CoordinatorLayout background
             View coordinatorLayout = drawerLayout.getChildAt(0); // First child is the CoordinatorLayout
             if (coordinatorLayout != null) {
-                coordinatorLayout.setBackgroundColor(getResources().getColor(R.color.modern_background, getTheme()));
+                coordinatorLayout.setBackgroundColor(getResources().getColor(R.color.background_primary, getTheme()));
             }
             
             // Update all MaterialCardView backgrounds to light

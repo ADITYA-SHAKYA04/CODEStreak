@@ -222,13 +222,32 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingBottom="16dp" />
+            android:paddingTop="16dp"
+            android:paddingBottom="110dp" />
+
+    </LinearLayout>
+
+    <!-- Modern Bottom Navigation Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bottomNavCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="@color/surface_primary"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardMaxElevation="16dp"
+        android:visibility="visible">
 
         <include
-            layout="@layout/floating_bottom_navigation"
+            android:id="@+id/customBottomNavigation"
+            layout="@layout/custom_bottom_navigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-    </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </FrameLayout>
