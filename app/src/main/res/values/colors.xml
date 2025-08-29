@@ -143,4 +143,13 @@
     <!-- Chip colors -->
     <color name="chip_background">#E3F2FD</color>
     <color name="chip_text">#1976D2</color>
+    
+    <!-- Missing colors for AI layouts -->
+    <color name="blue_main">#1976D2</color>
+    <color name="background_gray">#F5F5F5</color>
+    <color name="gray_text">#757575</color>
+    
+    <!-- Code colors -->
+    <color name="code_background">#F8F9FA</color>
+    <color name="code_border">#E9ECEF</color>
 </resources>

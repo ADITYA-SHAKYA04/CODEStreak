@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Google AI Edge Gallery Architecture Demo"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        android:textAlignment="center" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="This demo uses the exact same architecture as Google AI Edge Gallery for model downloads"
+        android:textSize="14sp"
+        android:layout_marginBottom="24dp"
+        android:textAlignment="center"
+        android:alpha="0.8" />
+
+    <TextView
+        android:id="@+id/tvGoogleStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔑 Ready to authenticate with Google's architecture"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:background="@drawable/rounded_background"
+        android:textAlignment="center" />
+
+    <ProgressBar
+        android:id="@+id/progressBarGoogle"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btnAuthenticateGoogle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Authenticate with Gmail"
+        android:layout_marginBottom="12dp"
+        android:padding="12dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btnDownloadWithWorkManager"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Download with Google's WorkManager"
+        android:enabled="false"
+        android:layout_marginBottom="12dp"
+        android:padding="12dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btnDetectExistingModels"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔍 Use Existing Google AI Edge Models"
+        android:layout_marginBottom="12dp"
+        android:padding="12dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btnCancelDownload"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cancel Download"
+        android:enabled="false"
+        android:padding="12dp"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Features:\n• WorkManager for reliable background downloads\n• Resume capability for interrupted downloads\n• Progress tracking with ETA calculations\n• Foreground service notifications\n• Repository pattern architecture\n• Exact same as Google AI Edge Gallery"
+        android:textSize="12sp"
+        android:layout_marginTop="24dp"
+        android:textAlignment="center"
+        android:alpha="0.7" />
+
+</LinearLayout>

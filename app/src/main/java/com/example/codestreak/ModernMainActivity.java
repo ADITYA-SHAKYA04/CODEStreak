@@ -1,6 +1,7 @@
 package com.example.codestreak;
 
 import android.animation.ValueAnimator;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -120,6 +121,13 @@ public class ModernMainActivity extends BaseActivity {
     // Add submission calendar data and caching like MainActivity
     private org.json.JSONObject submissionCalendarData;
     private java.util.Set<String> monthsWithDataCache = null;
+    
+    // Developer mode activation (tap welcome text 7 times)
+    private int welcomeTextClickCount = 0;
+    private long lastWelcomeClickTime = 0;
+    private boolean developerModeEnabled = false;
+    private static final int DEVELOPER_MODE_CLICKS = 7;
+    private static final long CLICK_TIMEOUT = 2000; // 2 seconds
     
     // Popups
     private PopupWindow pieChartPopup;
@@ -258,6 +266,10 @@ public class ModernMainActivity extends BaseActivity {
         toolbar = findViewById(R.id.toolbar);
         menuButton = findViewById(R.id.menuButton);
         welcomeText = findViewById(R.id.welcomeText);
+        
+        // Set up developer mode activation (tap welcome text 7 times)
+        setupDeveloperModeActivation();
+        
         currentStreakText = findViewById(R.id.currentStreakText);
         longestStreakText = findViewById(R.id.longestStreakText);
         easyCountTableText = findViewById(R.id.easyCountTableText);
@@ -2419,5 +2431,99 @@ public class ModernMainActivity extends BaseActivity {
     
     public void showTestNotification() {
         NotificationHelper.showDailyProblemNotification(this, true);
+    }
+    
+    // Developer mode activation methods
+    private void setupDeveloperModeActivation() {
+        if (welcomeText != null) {
+            welcomeText.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    long currentTime = System.currentTimeMillis();
+                    
+                    // Reset count if too much time has passed since last click
+                    if (currentTime - lastWelcomeClickTime > CLICK_TIMEOUT) {
+                        welcomeTextClickCount = 0;
+                    }
+                    
+                    welcomeTextClickCount++;
+                    lastWelcomeClickTime = currentTime;
+                    
+                    if (welcomeTextClickCount >= DEVELOPER_MODE_CLICKS) {
+                        activateDeveloperMode();
+                        welcomeTextClickCount = 0; // Reset counter
+                    }
+                }
+            });
+        }
+    }
+    
+    private void activateDeveloperMode() {
+        if (developerModeEnabled) {
+            Toast.makeText(this, "🔧 Developer Mode Already Active", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        developerModeEnabled = true;
+        
+        // Show developer mode dialog with Google AI Edge Gallery options
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🚀 Developer Mode Activated")
+            .setMessage("Welcome to Developer Mode!\n\n" +
+                       "Available Options:\n" +
+                       "• 🏗️ Google Architecture Demo\n" +
+                       "• 📧 Gmail Auth Example\n" +
+                       "• 🤖 Enhanced AI Chat\n" +
+                       "• 🔍 Detect Existing Models")
+            .setPositiveButton("🏗️ Architecture", (dialog, which) -> {
+                // Launch GoogleArchitectureExampleActivity
+                Intent intent = new Intent(this, GoogleArchitectureExampleActivity.class);
+                startActivity(intent);
+            })
+            .setNeutralButton("🤖 AI Chat", (dialog, which) -> {
+                // Launch enhanced AI Chat with Google models
+                Intent intent = new Intent(this, AIChatActivity.class);
+                intent.putExtra("problem_title", "Developer Mode Chat");
+                intent.putExtra("problem_description", "Enhanced AI chat with Google model downloads");
+                startActivity(intent);
+            })
+            .setNegativeButton("🔍 Models", (dialog, which) -> {
+                // Detect existing Google AI Edge models
+                detectExistingGoogleModels();
+            })
+            .show();
+        
+        // Visual feedback
+        Toast.makeText(this, "🚀 Developer Mode Activated!", Toast.LENGTH_LONG).show();
+        
+        // Add subtle visual indicator
+        if (welcomeText != null) {
+            welcomeText.setText(welcomeText.getText() + " 🔧");
+        }
+    }
+    
+    private void detectExistingGoogleModels() {
+        // Use the AISolutionHelper_backup method to detect existing models
+        try {
+            AISolutionHelper_backup helper = new AISolutionHelper_backup(this);
+            helper.detectExistingGoogleModels(this, new AISolutionHelper_backup.GoogleDownloadCallback() {
+                @Override
+                public void onProgress(int progress, String status) {
+                    // Progress updates during detection
+                }
+                
+                @Override
+                public void onComplete(String modelPath) {
+                    Toast.makeText(ModernMainActivity.this, "Model ready: " + modelPath, Toast.LENGTH_LONG).show();
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(ModernMainActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            Toast.makeText(this, "Error detecting models: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }

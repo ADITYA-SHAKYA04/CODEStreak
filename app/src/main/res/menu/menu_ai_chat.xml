@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <item
+        android:id="@+id/action_select_model"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="Select Model"
+        app:showAsAction="ifRoom" />
+    
+    <item
+        android:id="@+id/action_download_models"
+        android:icon="@android:drawable/stat_sys_download"
+        android:title="Download Models"
+        app:showAsAction="ifRoom" />
+        
+</menu>

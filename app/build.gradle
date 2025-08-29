@@ -50,6 +50,12 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
     // SharedPreferences
     implementation 'androidx.preference:preference:1.2.1'
+    // MediaPipe LLM Inference
+    implementation 'com.google.mediapipe:tasks-genai:0.10.24'
+    // WorkManager - exactly like Google AI Edge Gallery
+    implementation 'androidx.work:work-runtime:2.9.0'
+    // Lifecycle components for observers
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

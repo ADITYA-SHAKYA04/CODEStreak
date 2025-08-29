@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gmail Authentication for AI Models"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"
+        android:textAlignment="center" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ready to authenticate"
+        android:textSize="16sp"
+        android:layout_marginBottom="24dp"
+        android:padding="12dp"
+        android:background="@drawable/rounded_background"
+        android:textAlignment="center" />
+
+    <Button
+        android:id="@+id/btnAuthenticate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Authenticate with Gmail"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btnDownloadModel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Download AI Model"
+        android:enabled="false"
+        android:layout_marginBottom="12dp"
+        android:padding="12dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btnDetectModels"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔍 Use Existing Google AI Edge Models"
+        android:padding="12dp"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Note: Gmail authentication is required to download AI models from protected repositories."
+        android:textSize="12sp"
+        android:layout_marginTop="24dp"
+        android:textAlignment="center"
+        android:alpha="0.7" />
+
+</LinearLayout>

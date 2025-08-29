@@ -37,6 +37,7 @@ public class ProblemDetailActivity extends BaseActivity {
     private ChipGroup topicChipGroup;
     private TextView companyTags;
     private MaterialButton solveButton;
+    private MaterialButton aiChatButton;
     private ImageView backButton;
     private LinearLayout hintsContainer;
     private TextView hintsTitle;
@@ -79,6 +80,7 @@ public class ProblemDetailActivity extends BaseActivity {
         topicChipGroup = findViewById(R.id.topicChipGroup);
         companyTags = findViewById(R.id.companyTags);
         solveButton = findViewById(R.id.solveButton);
+        aiChatButton = findViewById(R.id.aiChatButton);
         backButton = findViewById(R.id.backButton);
         hintsContainer = findViewById(R.id.hintsContainer);
         hintsTitle = findViewById(R.id.hintsTitle);
@@ -1035,6 +1037,21 @@ public class ProblemDetailActivity extends BaseActivity {
     
     private void setupClickListeners() {
         backButton.setOnClickListener(v -> finish());
+        
+        aiChatButton.setOnClickListener(v -> {
+            // Navigate to AI Chat with problem context
+            String title = problemTitle.getText().toString();
+            String description = problemDescription.getText().toString();
+            
+            if (description.isEmpty() || description.startsWith("Loading") || description.startsWith("Error:")) {
+                description = getSampleDescription(title);
+            }
+            
+            Intent aiChatIntent = new Intent(this, AIChatActivity.class);
+            aiChatIntent.putExtra("problem_title", title);
+            aiChatIntent.putExtra("problem_description", description);
+            startActivity(aiChatIntent);
+        });
         
         solveButton.setOnClickListener(v -> {
             android.widget.Toast.makeText(this, "Navigate to coding environment", android.widget.Toast.LENGTH_SHORT).show();

@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:allowBackup="true"
@@ -74,6 +76,44 @@
                 android:value=".ProblemsActivity" />
         </activity>
         
+        <!-- AI Chat Activity -->
+        <activity
+            android:name=".AIChatActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ProblemDetailActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ProblemDetailActivity" />
+        </activity>
+        
+        <!-- AI Solution Activity -->
+        <activity
+            android:name=".AISolutionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ProblemDetailActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ProblemDetailActivity" />
+        </activity>
+        
+        <!-- Google Architecture Example Activity -->
+        <activity
+            android:name=".GoogleArchitectureExampleActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Google AI Edge Gallery Demo">
+        </activity>
+        
+        <!-- Gmail Auth Example Activity -->
+        <activity
+            android:name=".GmailAuthExampleActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Gmail Authentication Demo">
+        </activity>
+        
         <!-- Company Problems Activity -->
         <activity
             android:name=".CompanyProblemsActivity"
@@ -108,6 +148,12 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
+        
+        <!-- WorkManager Foreground Service for Downloads -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         
     </application>
 

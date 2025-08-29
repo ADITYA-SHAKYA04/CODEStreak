@@ -2,4 +2,13 @@
     <string name="app_name">CodeStreak</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    
+    <!-- Google OAuth Client ID - Replace with your actual client ID from Google Cloud Console -->
+    <string name="default_web_client_id">YOUR_GOOGLE_OAUTH_CLIENT_ID_HERE</string>
+    
+    <!-- Gmail Authentication -->
+    <string name="gmail_auth_title">Gmail Authentication</string>
+    <string name="gmail_auth_description">Authenticate with Gmail to download AI models</string>
+    <string name="gmail_auth_success">Gmail authentication successful</string>
+    <string name="gmail_auth_failed">Gmail authentication failed</string>
 </resources>
