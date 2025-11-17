@@ -54,6 +54,11 @@ public class DefaultDownloadRepository implements DownloadRepository {
     
     @Override
     public void downloadModel(Task task, Model model, OnStatusUpdatedCallback onStatusUpdated) {
+        downloadModel(task, model, null, onStatusUpdated);
+    }
+    
+    @Override
+    public void downloadModel(Task task, Model model, String accessToken, OnStatusUpdatedCallback onStatusUpdated) {
         // Create input data - exactly like Google's implementation
         Data.Builder builder = new Data.Builder();
         long totalBytes = model.totalBytes + model.extraDataFiles.stream()
@@ -84,9 +89,11 @@ public class DefaultDownloadRepository implements DownloadRepository {
                 .putString(ModelDownloadWorker.KEY_MODEL_EXTRA_DATA_DOWNLOAD_FILE_NAMES, extraFileNames);
         }
         
-        // Add access token if available
-        if (model.accessToken != null) {
-            inputDataBuilder.putString(ModelDownloadWorker.KEY_MODEL_DOWNLOAD_ACCESS_TOKEN, model.accessToken);
+        // Add access token if available (from parameter or model)
+        String tokenToUse = accessToken != null ? accessToken : model.accessToken;
+        if (tokenToUse != null) {
+            Log.d(TAG, "Using access token for authentication");
+            inputDataBuilder.putString(ModelDownloadWorker.KEY_MODEL_DOWNLOAD_ACCESS_TOKEN, tokenToUse);
         }
         
         Data inputData = inputDataBuilder.build();

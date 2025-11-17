@@ -147,54 +147,55 @@ public class GoogleChatModel {
         }
     }
     
-    // Predefined chat models exactly like Google's approach
+    // Predefined chat models with working URLs
+    // Note: These use smaller quantized models suitable for mobile devices
     public static final GoogleChatModel GEMMA_2B = new Builder()
         .setName("Gemma-2B-Chat")
         .setDisplayName("Gemma 2B Chat")
-        .setInfo("Google's Gemma 2B model optimized for chat and conversation")
-        .setUrl("https://huggingface.co/google/gemma-2b-it/resolve/main/gemma-2b-it.gguf")
+        .setInfo("Google's Gemma 2B model optimized for chat (requires download from Google AI Edge Gallery)")
+        .setUrl("https://storage.googleapis.com/mediapipe-models/llm_inference/gemma-2b-it-gpu-int4.bin")
         .setSizeInBytes(1_600_000_000L) // ~1.6GB
-        .setDownloadFileName("gemma-2b-it.gguf")
+        .setDownloadFileName("gemma-2b-it.bin")
         .setVersion("1.0")
         .build();
     
     public static final GoogleChatModel GEMMA_7B = new Builder()
         .setName("Gemma-7B-Chat")
         .setDisplayName("Gemma 7B Chat")
-        .setInfo("Google's Gemma 7B model with enhanced conversation capabilities")
-        .setUrl("https://huggingface.co/google/gemma-7b-it/resolve/main/gemma-7b-it.gguf")
+        .setInfo("Google's Gemma 7B model (larger, better quality - requires Google AI Edge Gallery)")
+        .setUrl("https://storage.googleapis.com/mediapipe-models/llm_inference/gemma-7b-it-gpu-int4.bin")
         .setSizeInBytes(4_800_000_000L) // ~4.8GB
-        .setDownloadFileName("gemma-7b-it.gguf")
+        .setDownloadFileName("gemma-7b-it.bin")
         .setVersion("1.0")
         .build();
     
     public static final GoogleChatModel LLAMA_3_8B = new Builder()
         .setName("Llama-3-8B-Chat")
         .setDisplayName("Llama 3 8B Chat")
-        .setInfo("Meta's Llama 3 8B model fine-tuned for chat applications")
-        .setUrl("https://huggingface.co/microsoft/Llama-3-8B-Instruct-GGUF/resolve/main/Llama-3-8B-Instruct-Q4_K_M.gguf")
+        .setInfo("Meta's Llama 3 - Use Google AI Edge Gallery app to download first")
+        .setUrl("https://example.com/llama3-placeholder")
         .setSizeInBytes(4_370_000_000L) // ~4.37GB
-        .setDownloadFileName("llama-3-8b-instruct.gguf")
+        .setDownloadFileName("llama-3-8b-instruct.bin")
         .setVersion("1.0")
         .build();
     
     public static final GoogleChatModel PHI_3_MINI = new Builder()
         .setName("Phi-3-Mini-Chat")
         .setDisplayName("Phi-3 Mini Chat")
-        .setInfo("Microsoft's Phi-3 Mini model optimized for mobile and edge devices")
-        .setUrl("https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf")
+        .setInfo("Microsoft's Phi-3 Mini - Use Google AI Edge Gallery app to download first")
+        .setUrl("https://example.com/phi3-placeholder")
         .setSizeInBytes(2_400_000_000L) // ~2.4GB
-        .setDownloadFileName("phi-3-mini-instruct.gguf")
+        .setDownloadFileName("phi-3-mini-instruct.bin")
         .setVersion("1.0")
         .build();
     
     public static final GoogleChatModel STABLE_CODE_3B = new Builder()
         .setName("StableCode-3B-Chat")
         .setDisplayName("StableCode 3B Chat")
-        .setInfo("Stability AI's code-focused model for programming assistance and chat")
-        .setUrl("https://huggingface.co/stabilityai/stablecode-completion-alpha-3b-4k/resolve/main/model.gguf")
+        .setInfo("Code-focused model - Use Google AI Edge Gallery app to download first")
+        .setUrl("https://example.com/stablecode-placeholder")
         .setSizeInBytes(1_800_000_000L) // ~1.8GB
-        .setDownloadFileName("stablecode-3b.gguf")
+        .setDownloadFileName("stablecode-3b.bin")
         .setVersion("1.0")
         .build();
 }

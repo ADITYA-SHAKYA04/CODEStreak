@@ -30,6 +30,7 @@ public class GoogleModelDownloadManager {
     private final Context context;
     private final WorkManager workManager;
     private final SharedPreferences downloadStartTimePrefs;
+    private final AISolutionHelper_backup aiHelper;
     
     // Google's exact notification configuration
     private static final String DOWNLOAD_NOTIFICATION_CHANNEL = "model_download_channel";
@@ -39,6 +40,7 @@ public class GoogleModelDownloadManager {
         this.context = context;
         this.workManager = WorkManager.getInstance(context);
         this.downloadStartTimePrefs = context.getSharedPreferences("download_start_time_ms", Context.MODE_PRIVATE);
+        this.aiHelper = new AISolutionHelper_backup(context);
         
         setupNotificationChannel();
     }
@@ -60,7 +62,7 @@ public class GoogleModelDownloadManager {
     }
     
     /**
-     * Download a chat AI model using simplified approach
+     * Download a chat AI model using Google's WorkManager architecture
      */
     public void downloadChatModel(
         GoogleChatModel model, 
@@ -68,24 +70,66 @@ public class GoogleModelDownloadManager {
     ) {
         Log.d(TAG, "Starting download for model: " + model.getName());
         
-        // For now, simulate the download process and use callback
-        callback.onProgress(0, "Initializing download...");
+        if (!(context instanceof android.app.Activity)) {
+            Log.e(TAG, "Context is not an Activity, cannot proceed with download");
+            callback.onError("Context must be an Activity to download models");
+            return;
+        }
         
-        // In a real implementation, you would:
-        // 1. Use WorkManager with ModelDownloadWorker (when available)
-        // 2. Handle actual file download with progress
-        // 3. Extract ZIP files if needed
-        // 4. Manage foreground service notifications
+        // Use the real download method from AISolutionHelper_backup
+        android.app.Activity activity = (android.app.Activity) context;
         
-        // For demo purposes, simulate a quick success
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            callback.onProgress(50, "Downloading... 50%");
+        // First check if model already exists
+        if (model.isDownloaded(context)) {
+            Log.d(TAG, "Model already downloaded: " + model.getName());
+            callback.onComplete(model.getModelPath(context));
+            return;
+        }
+        
+        // Use the actual WorkManager download from AISolutionHelper_backup
+        callback.onProgress(0, "Initializing download for " + model.getDisplayName() + "...");
+        
+        // Use detectExistingGoogleModels first to check, then download if needed
+        aiHelper.detectExistingGoogleModels(activity, new AISolutionHelper_backup.GoogleDownloadCallback() {
+            @Override
+            public void onProgress(int progress, String status) {
+                callback.onProgress(progress, status);
+            }
             
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                callback.onProgress(100, "Download complete!");
-                callback.onComplete(model.getModelPath(context));
-            }, 1000);
-        }, 1000);
+            @Override
+            public void onComplete(String modelPath) {
+                Log.d(TAG, "Model found/downloaded successfully: " + modelPath);
+                callback.onComplete(modelPath);
+                sendSuccessNotification(model);
+            }
+            
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Download failed: " + error);
+                // Try direct download with WorkManager as fallback
+                Log.d(TAG, "Attempting WorkManager download as fallback...");
+                aiHelper.downloadModelWithWorkManager(activity, new AISolutionHelper_backup.GoogleDownloadCallback() {
+                    @Override
+                    public void onProgress(int progress, String status) {
+                        callback.onProgress(progress, status);
+                    }
+                    
+                    @Override
+                    public void onComplete(String modelPath) {
+                        Log.d(TAG, "WorkManager download completed: " + modelPath);
+                        callback.onComplete(modelPath);
+                        sendSuccessNotification(model);
+                    }
+                    
+                    @Override
+                    public void onError(String finalError) {
+                        Log.e(TAG, "WorkManager download also failed: " + finalError);
+                        callback.onError(finalError);
+                        sendFailureNotification(model);
+                    }
+                });
+            }
+        });
     }
     
     /**

@@ -39,11 +39,11 @@
     <color name="leetcode_blue">#3B82F6</color>
     
     <!-- Modern Theme Colors -->
-    <!-- Light theme -->
+    <!-- Light theme - Using lighter colors for light mode -->
     <color name="modern_primary">#1976D2</color>
     <color name="modern_primary_variant">#1565C0</color>
     <color name="modern_secondary">#FFA726</color>
-    <color name="modern_background">#FAFAFA</color>
+    <color name="modern_background">#F5F5F5</color>
     <color name="modern_surface">#FFFFFF</color>
     <color name="modern_on_primary">#FFFFFF</color>
     <color name="modern_on_secondary">#000000</color>
@@ -54,8 +54,8 @@
     <color name="modern_primary_dark">#2196F3</color>
     <color name="modern_primary_variant_dark">#1976D2</color>
     <color name="modern_secondary_dark">#FFB74D</color>
-    <color name="modern_background_dark">#121212</color>
-    <color name="modern_surface_dark">#1E1E1E</color>
+    <color name="modern_background_dark">#1A1A1A</color>
+    <color name="modern_surface_dark">#262626</color>
     <color name="modern_on_primary_dark">#000000</color>
     <color name="modern_on_secondary_dark">#000000</color>
     <color name="modern_on_background_dark">#FFFFFF</color>
@@ -80,14 +80,14 @@
     <color name="toggle_thumb">#FFFFFF</color>
     
     <!-- Missing color references -->
-    <color name="nav_selected">#1976D2</color>
+    <color name="nav_selected">#FFA116</color>
     <color name="nav_unselected">#757575</color>
     <color name="accent_primary">#1976D2</color>
     <color name="accent_secondary">#FFA726</color>
-    <color name="background_primary">#FAFAFA</color>
-    <color name="background_secondary">#F5F5F5</color>
+    <color name="background_primary">#F5F5F5</color>
+    <color name="background_secondary">#EEEEEE</color>
     <color name="surface_primary">#FFFFFF</color>
-    <color name="surface_secondary">#F5F5F5</color>
+    <color name="surface_secondary">#FAFAFA</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>

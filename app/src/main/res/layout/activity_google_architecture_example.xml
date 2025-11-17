@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
+    android:background="@color/background_primary"
     android:gravity="center">
 
     <TextView
@@ -12,6 +13,7 @@
         android:text="Google AI Edge Gallery Architecture Demo"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp"
         android:textAlignment="center" />
 
@@ -20,6 +22,7 @@
         android:layout_height="wrap_content"
         android:text="This demo uses the exact same architecture as Google AI Edge Gallery for model downloads"
         android:textSize="14sp"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="24dp"
         android:textAlignment="center"
         android:alpha="0.8" />
@@ -30,9 +33,11 @@
         android:layout_height="wrap_content"
         android:text="🔑 Ready to authenticate with Google's architecture"
         android:textSize="16sp"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp"
         android:padding="12dp"
         android:background="@drawable/rounded_background"
+        android:backgroundTint="@color/surface_primary"
         android:textAlignment="center" />
 
     <ProgressBar
@@ -48,6 +53,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Authenticate with Gmail"
+        android:backgroundTint="@color/accent_primary"
         android:layout_marginBottom="12dp"
         android:padding="12dp"
         android:textSize="16sp" />
@@ -58,6 +64,7 @@
         android:layout_height="wrap_content"
         android:text="Download with Google's WorkManager"
         android:enabled="false"
+        android:backgroundTint="@color/accent_primary"
         android:layout_marginBottom="12dp"
         android:padding="12dp"
         android:textSize="16sp" />
@@ -67,6 +74,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="🔍 Use Existing Google AI Edge Models"
+        android:backgroundTint="@color/success_green"
         android:layout_marginBottom="12dp"
         android:padding="12dp"
         android:textSize="16sp" />
@@ -77,6 +85,7 @@
         android:layout_height="wrap_content"
         android:text="Cancel Download"
         android:enabled="false"
+        android:backgroundTint="@color/error_red"
         android:padding="12dp"
         android:textSize="16sp" />
 
@@ -85,6 +94,7 @@
         android:layout_height="wrap_content"
         android:text="Features:\n• WorkManager for reliable background downloads\n• Resume capability for interrupted downloads\n• Progress tracking with ETA calculations\n• Foreground service notifications\n• Repository pattern architecture\n• Exact same as Google AI Edge Gallery"
         android:textSize="12sp"
+        android:textColor="@color/text_secondary"
         android:layout_marginTop="24dp"
         android:textAlignment="center"
         android:alpha="0.7" />

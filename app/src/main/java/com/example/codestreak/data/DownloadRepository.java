@@ -24,6 +24,20 @@ public interface DownloadRepository {
     );
     
     /**
+     * Downloads a model for a specific task with authentication
+     * @param task The task this model belongs to
+     * @param model The model to download
+     * @param accessToken HuggingFace access token for authentication
+     * @param onStatusUpdated Callback for download status updates
+     */
+    void downloadModel(
+        Task task,
+        Model model,
+        String accessToken,
+        OnStatusUpdatedCallback onStatusUpdated
+    );
+    
+    /**
      * Cancels download for a specific model
      * @param model The model to cancel download for
      */

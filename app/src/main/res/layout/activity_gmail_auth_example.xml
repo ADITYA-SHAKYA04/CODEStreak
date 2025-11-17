@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
+    android:background="@color/background_primary"
     android:gravity="center">
 
     <TextView
@@ -12,6 +13,7 @@
         android:text="Gmail Authentication for AI Models"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="32dp"
         android:textAlignment="center" />
 
@@ -21,9 +23,11 @@
         android:layout_height="wrap_content"
         android:text="Ready to authenticate"
         android:textSize="16sp"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="24dp"
         android:padding="12dp"
         android:background="@drawable/rounded_background"
+        android:backgroundTint="@color/surface_primary"
         android:textAlignment="center" />
 
     <Button
@@ -32,6 +36,7 @@
         android:layout_height="wrap_content"
         android:text="Authenticate with Gmail"
         android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/accent_primary"
         android:padding="12dp"
         android:textSize="16sp" />
 
@@ -42,6 +47,7 @@
         android:text="Download AI Model"
         android:enabled="false"
         android:layout_marginBottom="12dp"
+        android:backgroundTint="@color/accent_primary"
         android:padding="12dp"
         android:textSize="16sp" />
 
@@ -50,6 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="🔍 Use Existing Google AI Edge Models"
+        android:backgroundTint="@color/success_green"
         android:padding="12dp"
         android:textSize="16sp" />
 
@@ -58,6 +65,7 @@
         android:layout_height="wrap_content"
         android:text="Note: Gmail authentication is required to download AI models from protected repositories."
         android:textSize="12sp"
+        android:textColor="@color/text_secondary"
         android:layout_marginTop="24dp"
         android:textAlignment="center"
         android:alpha="0.7" />

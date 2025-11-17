@@ -138,6 +138,11 @@ public class ModernMainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_modern);
         
+        // Set status bar color to match activity background
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.background_primary, getTheme()));
+        }
+        
         // Initialize cache manager
         cacheManager = new CacheManager(this);
         

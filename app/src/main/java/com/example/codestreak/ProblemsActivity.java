@@ -77,6 +77,11 @@ public class ProblemsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_problems);
         
+        // Set status bar color to match activity background
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.background_primary, getTheme()));
+        }
+        
         // Apply theme-based styling
         applyTheme();
         

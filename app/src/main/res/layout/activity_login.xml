@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/leetcode_dark_bg"
+    android:background="@color/background_primary"
     android:padding="32dp"
     android:gravity="center">
 
@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="CodeStreak"
-            android:textColor="@color/leetcode_text_primary"
+            android:textColor="@color/text_primary"
             android:textSize="32sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
@@ -36,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Track your LeetCode journey"
-            android:textColor="@color/leetcode_text_secondary"
+            android:textColor="@color/text_secondary"
             android:textSize="16sp"
             android:gravity="center" />
 
@@ -46,7 +46,7 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/leetcode_card_bg"
+        app:cardBackgroundColor="@color/surface_primary"
         app:cardCornerRadius="16dp"
         app:cardElevation="8dp"
         android:layout_marginBottom="24dp">
@@ -61,7 +61,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Welcome Back!"
-                android:textColor="@color/leetcode_text_primary"
+                android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
@@ -70,7 +70,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sign in to continue tracking your progress"
-                android:textColor="@color/leetcode_text_secondary"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:layout_marginBottom="32dp" />
 
@@ -79,21 +79,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:boxBackgroundColor="@color/leetcode_dark_bg"
+                app:boxBackgroundColor="@color/background_secondary"
                 app:boxCornerRadiusTopStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
                 app:boxCornerRadiusBottomStart="8dp"
                 app:boxCornerRadiusBottomEnd="8dp"
-                app:hintTextColor="@color/leetcode_text_secondary"
-                app:boxStrokeColor="@color/leetcode_orange">
+                app:hintTextColor="@color/text_secondary"
+                app:boxStrokeColor="@color/accent_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/leetcodeUsernameInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="LeetCode Username"
-                    android:textColor="@color/leetcode_text_primary"
-                    android:textColorHint="@color/leetcode_text_secondary" />
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -110,8 +110,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="Continue with Username"
-                android:textColor="@color/leetcode_text_primary"
-                android:backgroundTint="@color/leetcode_orange"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/accent_primary"
                 app:cornerRadius="8dp"
                 android:layout_marginBottom="16dp" />
 
@@ -121,7 +121,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:text="Skip for now"
-                android:textColor="@color/leetcode_text_secondary"
+                android:textColor="@color/text_secondary"
                 style="@style/Widget.Material3.Button.TextButton"
                 app:cornerRadius="8dp" />
 
@@ -134,7 +134,7 @@
         android:id="@+id/loginProgressBar"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:indeterminateTint="@color/leetcode_orange"
+        android:indeterminateTint="@color/accent_primary"
         android:visibility="gone" />
 
     <!-- Footer -->
@@ -142,7 +142,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="By continuing, you agree to sync your LeetCode data"
-        android:textColor="@color/leetcode_text_secondary"
+        android:textColor="@color/text_secondary"
         android:textSize="12sp"
         android:gravity="center"
         android:layout_marginTop="24dp" />

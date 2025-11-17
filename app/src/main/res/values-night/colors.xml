@@ -1,25 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background_primary">#121212</color>
-    <color name="background_secondary">#1E1E1E</color>
-    <color name="surface_primary">#1E1E1E</color>
-    <color name="surface_secondary">#2A2A2A</color>
+    <!-- Dark Mode Colors - LeetCode Theme -->
+    <color name="background_primary">#1A1A1A</color>
+    <color name="background_secondary">#262626</color>
+    <color name="surface_primary">#262626</color>
+    <color name="surface_secondary">#333333</color>
     <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B3B3B3</color>
+    <color name="text_secondary">#A0A0A0</color>
     <color name="text_tertiary">#808080</color>
-    <color name="accent_primary">#BB86FC</color>
-    <color name="accent_secondary">#F57C00</color>
-    <color name="colorPrimary">#BB86FC</color>
-    <color name="colorPrimaryVariant">#3700B3</color>
+    <color name="accent_primary">#FFA116</color>
+    <color name="accent_secondary">#FFB84D</color>
+    <color name="colorPrimary">#FFA116</color>
+    <color name="colorPrimaryVariant">#CC8112</color>
     <color name="colorOnPrimary">#000000</color>
-    <color name="colorSecondary">#F57C00</color>
-    <color name="colorSecondaryVariant">#018786</color>
+    <color name="colorSecondary">#00B8A3</color>
+    <color name="colorSecondaryVariant">#009688</color>
     <color name="colorOnSecondary">#000000</color>
-    <color name="backgroundColor">#121212</color>
+    <color name="backgroundColor">#1A1A1A</color>
     <color name="colorOnBackground">#FFFFFF</color>
-    <color name="colorSurface">#1E1E1E</color>
+    <color name="colorSurface">#262626</color>
     <color name="colorOnSurface">#FFFFFF</color>
-    <color name="colorError">#CF6679</color>
-    <color name="colorOnError">#000000</color>
+    <color name="colorError">#FF375F</color>
+    <color name="colorOnError">#FFFFFF</color>
     <color name="divider">#333333</color>
+    <color name="nav_selected">#FFA116</color>
+    <color name="nav_unselected">#666666</color>
+    <color name="code_background_color">#1E1E1E</color>
+    <color name="code_border_color">#333333</color>
+    <color name="code_text">#E0E0E0</color>
+    <color name="code_background">#1E1E1E</color>
+    <color name="code_border">#333333</color>
+    <color name="background_gray">#2A2A2A</color>
 </resources>

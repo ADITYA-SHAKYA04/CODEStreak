@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_primary"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
     <!-- Header -->
@@ -11,12 +12,12 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/blue_main"
+        android:background="@color/surface_primary"
         android:elevation="4dp"
         app:title="AI Code Assistant"
-        app:titleTextColor="@color/white"
+        app:titleTextColor="@color/text_primary"
         app:navigationIcon="@drawable/ic_arrow_back_24"
-        app:navigationIconTint="@color/white" />
+        app:navigationIconTint="@color/text_primary" />
 
     <!-- Problem Context Card -->
     <com.google.android.material.card.MaterialCardView
@@ -24,9 +25,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        app:cardBackgroundColor="@color/surface_primary"
         app:cardCornerRadius="12dp"
         app:cardElevation="2dp"
-        app:strokeColor="@color/blue_main"
+        app:strokeColor="@color/accent_primary"
         app:strokeWidth="1dp">
 
         <LinearLayout
@@ -39,7 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Problem Context"
-                android:textColor="@color/blue_main"
+                android:textColor="@color/accent_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -76,7 +78,7 @@
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/rounded_background"
-        android:backgroundTint="@color/background_gray"
+        android:backgroundTint="@color/surface_secondary"
         android:orientation="vertical"
         android:padding="12dp">
 
@@ -108,10 +110,14 @@
                 android:id="@+id/tvModelInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Gemma-3 1B"
-                android:textColor="@color/blue_main"
+                android:text="Smart Fallback"
+                android:textColor="@color/accent_primary"
                 android:textSize="11sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="4dp" />
 
         </LinearLayout>
 
@@ -124,8 +130,8 @@
             android:layout_marginTop="8dp"
             android:progress="0"
             android:visibility="gone"
-            android:progressTint="@color/blue_main"
-            android:progressBackgroundTint="@color/background_primary" />
+            android:progressTint="@color/accent_primary"
+            android:progressBackgroundTint="@color/background_secondary" />
 
     </LinearLayout>
 
@@ -255,7 +261,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:src="@drawable/ic_send_24"
-                app:backgroundTint="@color/blue_main"
+                app:backgroundTint="@color/accent_primary"
                 app:elevation="2dp"
                 app:fabSize="mini"
                 app:tint="@color/white" />

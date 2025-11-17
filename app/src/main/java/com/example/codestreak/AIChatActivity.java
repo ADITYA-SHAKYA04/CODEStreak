@@ -30,6 +30,7 @@ public class AIChatActivity extends AppCompatActivity {
     private EditText editTextMessage;
     private ImageButton buttonSend;
     private TextView modelStatusText;
+    private TextView tvModelInfo;
     private ProgressBar progressBarDownload;
     
     // Google download system integration
@@ -51,6 +52,11 @@ public class AIChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ai_chat);
         
+        // Set status bar color to match activity background
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.background_primary, getTheme()));
+        }
+        
         // Get problem data
         problemTitle = getIntent().getStringExtra(EXTRA_PROBLEM_TITLE);
         problemDescription = getIntent().getStringExtra(EXTRA_PROBLEM_DESCRIPTION);
@@ -62,8 +68,8 @@ public class AIChatActivity extends AppCompatActivity {
         setupChat();
         initializeAI();
         
-        // Check for existing models or prompt download
-        checkForChatModels();
+        // Show current model status
+        updateCurrentModelStatus();
     }
     
     private void initializeViews() {
@@ -71,7 +77,11 @@ public class AIChatActivity extends AppCompatActivity {
         editTextMessage = findViewById(R.id.et_message_input);
         buttonSend = findViewById(R.id.btn_send);
         modelStatusText = findViewById(R.id.tv_model_status);
+        tvModelInfo = findViewById(R.id.tvModelInfo);
         progressBarDownload = findViewById(R.id.progressBarDownload);
+        
+        // Make model info clickable to switch models
+        tvModelInfo.setOnClickListener(v -> showModelManagementDialog());
         
         // Setup toolbar navigation with menu
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
@@ -84,6 +94,9 @@ public class AIChatActivity extends AppCompatActivity {
         
         // Setup send button
         buttonSend.setOnClickListener(v -> sendMessage());
+        
+        // Setup quick action chips
+        setupQuickActionChips();
         
         // Enable send button only when there's text
         editTextMessage.addTextChangedListener(new TextWatcher() {
@@ -115,6 +128,24 @@ public class AIChatActivity extends AppCompatActivity {
         ChatMessage contextChat = new ChatMessage(contextMessage, ChatMessage.TYPE_AI);
         chatAdapter.addMessage(contextChat);
         scrollToBottom();
+    }
+    
+    private void setupQuickActionChips() {
+        com.google.android.material.chip.Chip chipExplain = findViewById(R.id.btn_explain_solution);
+        com.google.android.material.chip.Chip chipOptimize = findViewById(R.id.btn_optimize);
+        com.google.android.material.chip.Chip chipEdgeCases = findViewById(R.id.btn_edge_cases);
+        com.google.android.material.chip.Chip chipComplexity = findViewById(R.id.chipComplexity);
+        
+        chipExplain.setOnClickListener(v -> sendPredefinedMessage("Explain the best approach to solve this problem step by step"));
+        chipOptimize.setOnClickListener(v -> sendPredefinedMessage("What are the optimizations I can apply to improve the solution?"));
+        chipEdgeCases.setOnClickListener(v -> sendPredefinedMessage("What are the important edge cases and corner cases I should consider for this problem?"));
+        chipComplexity.setOnClickListener(v -> sendPredefinedMessage("What is the time and space complexity of the optimal solution?"));
+    }
+    
+    private void sendPredefinedMessage(String message) {
+        // Set the message in the input field and send it
+        editTextMessage.setText(message);
+        sendMessage();
     }
     
     private void initializeAI() {
@@ -198,66 +229,26 @@ public class AIChatActivity extends AppCompatActivity {
     }
     
     private void showErrorDialog(String error) {
-        new AlertDialog.Builder(this)
-                .setTitle("AI Initialization")
-                .setMessage(error)
-                .setPositiveButton("Continue with Smart Mode", (d, w) -> {
-                    modelStatusText.setText("⚡ Smart Fallback Mode");
-                    showAIReadyMessage();
-                })
-                .setNegativeButton("Download Model", (d, w) -> showModelSelectionDialog())
-                .show();
+        // Auto-activate Smart Fallback on any error
+        modelStatusText.setText("⚡ Smart Fallback Mode");
+        showAIReadyMessage();
     }
     
     private void showModelSelectionDialog() {
-        String[] modelNames = AISolutionHelper_backup.getAvailableModelNames();
-        String[] modelDescriptions = AISolutionHelper_backup.getAvailableModelDescriptions();
-        
-        android.util.Log.d("AIChatActivity", "Showing model dialog with " + modelNames.length + " models");
-        
-        // Create explicit, simple options that are guaranteed to show
-        String[] displayOptions = {
+        // Show options using Google AI Edge Gallery architecture
+        String[] options = {
             "💡 Smart Fallback (Works immediately)",
-            "� Use Existing Google AI Edge Model",
-            "�📥 Gemma 1.1 2B IT (Recommended) - 1.2GB",
-            "📥 Gemma 2 2B IT - 1.5GB", 
-            "📥 Phi-3 Mini 4K - 2.1GB",
-            "🔄 Retry Previous Download",
+            "🔍 Use Existing Google AI Edge Model",
+            "📥 Download New Model (Google AI Edge)",
             "❌ Cancel"
         };
         
-        android.util.Log.d("AIChatActivity", "Created " + displayOptions.length + " display options");
-        for (int i = 0; i < displayOptions.length; i++) {
-            android.util.Log.d("AIChatActivity", "Option " + i + ": " + displayOptions[i]);
-        }
-        
-        // Create a simple list dialog
         new AlertDialog.Builder(this)
                 .setTitle("🤖 Choose AI Mode")
-                .setItems(displayOptions, (dialog, which) -> {
-                    android.util.Log.d("AIChatActivity", "Selected option: " + which + " - " + displayOptions[which]);
-                    
+                .setItems(options, (dialog, which) -> {
                     switch (which) {
                         case 0: // Smart Fallback
-                            modelStatusText.setText("⚡ Smart Fallback Mode");
-                            progressBarDownload.setVisibility(View.GONE);
-                            Toast.makeText(this, "Ready to help with intelligent solutions! 🚀", Toast.LENGTH_SHORT).show();
-                            
-                            // Add welcome message
-                            ChatMessage welcomeMessage = new ChatMessage(
-                                "🎯 **Smart Fallback Mode Activated!**\n\n" +
-                                "I'm ready to help you with this problem using built-in intelligence.\n\n" +
-                                "✨ **What I can do:**\n" +
-                                "• Explain algorithms and approaches\n" +
-                                "• Generate optimized code solutions\n" +
-                                "• Analyze time/space complexity\n" +
-                                "• Provide debugging tips\n" +
-                                "• Handle edge cases\n\n" +
-                                "🚀 **Try asking:** \"Explain the approach\" or \"Show me the optimal solution\"",
-                                ChatMessage.TYPE_AI
-                            );
-                            chatAdapter.addMessage(welcomeMessage);
-                            scrollToBottom();
+                            activateSmartFallback();
                             break;
                             
                         case 1: // Use Existing Google AI Edge Model
@@ -268,48 +259,71 @@ public class AIChatActivity extends AppCompatActivity {
                             aiHelper.detectExistingGoogleModels(this, createGoogleDownloadCallback());
                             break;
                             
-                        case 2: // Gemma 1.1 2B IT
-                            startModelDownload(0, "Gemma 1.1 2B IT (Recommended)");
-                            break;
-                            
-                        case 3: // Gemma 2 2B IT
-                            startModelDownload(1, "Gemma 2 2B IT");
-                            break;
-                            
-                        case 4: // Phi-3 Mini 4K
-                            startModelDownload(2, "Phi-3 Mini 4K");
-                            break;
-                            
-                        case 5: // Retry Download
+                        case 2: // Download New Model
+                            modelStatusText.setText("📥 Preparing download...");
                             progressBarDownload.setVisibility(View.VISIBLE);
-                            modelStatusText.setText("🔄 Retrying download with Google WorkManager...");
-                            // Retry with Google architecture and Hugging Face auth
-                            aiHelper.downloadModelWithWorkManager(AIChatActivity.this, createGoogleDownloadCallback());
+                            progressBarDownload.setProgress(0);
+                            Toast.makeText(this, "🚀 Starting Google AI Edge download...", Toast.LENGTH_SHORT).show();
+                            aiHelper.downloadModelWithWorkManager(this, createGoogleDownloadCallback());
                             break;
                             
-                        case 6: // Cancel
+                        case 3: // Cancel
                         default:
-                            modelStatusText.setText("⚡ Smart Fallback Mode");
-                            progressBarDownload.setVisibility(View.GONE);
-                            Toast.makeText(this, "Using Smart Fallback mode", Toast.LENGTH_SHORT).show();
+                            activateSmartFallback();
                             break;
                     }
                 })
-                .setNegativeButton("Use Smart Fallback", (dialog, which) -> {
-                    modelStatusText.setText("⚡ Smart Fallback Mode");
-                    progressBarDownload.setVisibility(View.GONE);
-                    Toast.makeText(this, "Ready to help with smart solutions! 🧠", Toast.LENGTH_SHORT).show();
-                })
+                .setNegativeButton("Use Smart Fallback", (dialog, which) -> activateSmartFallback())
                 .show();
     }
     
-    private void startModelDownload(int modelIndex, String modelName) {
-        progressBarDownload.setVisibility(View.VISIBLE);
-        modelStatusText.setText("Downloading " + modelName + "...");
-        Toast.makeText(this, "🚀 Starting Google WorkManager download: " + modelName, Toast.LENGTH_SHORT).show();
+    private void activateSmartFallback() {
+        modelStatusText.setText("⚡ Smart Fallback Mode");
+        progressBarDownload.setVisibility(View.GONE);
         
-        // Use the new Google WorkManager architecture with Hugging Face auth
-        aiHelper.downloadModelWithWorkManager(this, createGoogleDownloadCallback());
+        ChatMessage welcomeMessage = new ChatMessage(
+            "🎯 **Smart Fallback Mode Activated!**\n\n" +
+            "I'm ready to help you with this problem using built-in intelligence.\n\n" +
+            "✨ **What I can do:**\n" +
+            "• Explain algorithms and approaches\n" +
+            "• Generate optimized code solutions\n" +
+            "• Analyze time/space complexity\n" +
+            "• Provide debugging tips\n" +
+            "• Handle edge cases\n\n" +
+            "🚀 **Try asking:** \"Explain the approach\" or \"Show me the optimal solution\"",
+            ChatMessage.TYPE_AI
+        );
+        chatAdapter.addMessage(welcomeMessage);
+        scrollToBottom();
+    }
+    
+    private void showDownloadInstructions() {
+        String instructions = 
+            "📲 **Download AI Models via Google AI Edge**\n\n" +
+            "**Option 1: Smart Fallback (Recommended)**\n" +
+            "• Works immediately without downloads\n" +
+            "• Provides intelligent solutions\n" +
+            "• No storage space required\n\n" +
+            "**Option 2: Google AI Edge Gallery App**\n" +
+            "1. Install 'Google AI Edge Gallery' from Play Store\n" +
+            "2. Download models (Gemma 2B recommended)\n" +
+            "3. Return here and select 'Use Existing Model'\n\n" +
+            "**Option 3: Download in App**\n" +
+            "• Select 'Download New Model' from menu\n" +
+            "• Uses Google's architecture\n" +
+            "• May require authentication";
+        
+        new AlertDialog.Builder(this)
+                .setTitle("📲 Download Instructions")
+                .setMessage(instructions)
+                .setPositiveButton("Download Now", (d, w) -> {
+                    aiHelper.downloadModelWithWorkManager(this, createGoogleDownloadCallback());
+                })
+                .setNeutralButton("Find Existing", (d, w) -> {
+                    aiHelper.detectExistingGoogleModels(this, createGoogleDownloadCallback());
+                })
+                .setNegativeButton("Use Smart Fallback", (d, w) -> activateSmartFallback())
+                .show();
     }
     
     private AISolutionHelper_backup.GoogleDownloadCallback createGoogleDownloadCallback() {
@@ -326,8 +340,48 @@ public class AIChatActivity extends AppCompatActivity {
             public void onComplete(String modelPath) {
                 runOnUiThread(() -> {
                     progressBarDownload.setVisibility(View.GONE);
-                    modelStatusText.setText("✅ Model Ready");
-                    Toast.makeText(AIChatActivity.this, "🎉 Model downloaded successfully! Ready to chat!", Toast.LENGTH_LONG).show();
+                    modelStatusText.setText("🔄 Initializing model...");
+                    
+                    // Update model info display
+                    updateCurrentModelStatus();
+                    
+                    // Reinitialize the AI helper to use the downloaded model
+                    aiHelper.initializeModel(new AISolutionHelper_backup.SolutionCallback() {
+                        @Override
+                        public void onSolutionGenerated(String response) {
+                            // Not used during initialization
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            modelStatusText.setText("✅ Model Ready (Smart Fallback)");
+                            Toast.makeText(AIChatActivity.this, 
+                                "🎉 Model downloaded! Using Smart Fallback mode.", 
+                                Toast.LENGTH_LONG).show();
+                        }
+                        
+                        @Override
+                        public void onProgress(String progress) {
+                            modelStatusText.setText(progress);
+                        }
+                        
+                        @Override
+                        public void onModelLoaded() {
+                            modelStatusText.setText("✅ Model Ready!");
+                            Toast.makeText(AIChatActivity.this, 
+                                "🎉 Model initialized successfully! Ready to chat!", 
+                                Toast.LENGTH_LONG).show();
+                        }
+                        
+                        @Override
+                        public void onDownloadProgress(int progress, String status) {
+                            // Not used during initialization
+                        }
+                    });
+                    
+                    Toast.makeText(AIChatActivity.this, 
+                        "🎉 Model downloaded successfully! Initializing...", 
+                        Toast.LENGTH_SHORT).show();
                 });
             }
             
@@ -467,7 +521,7 @@ public class AIChatActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_select_model) {
-            showGoogleModelSelectionDialog();
+            showModelManagementDialog();
             return true;
         } else if (item.getItemId() == R.id.action_download_models) {
             showModelDownloadDialog();
@@ -477,143 +531,78 @@ public class AIChatActivity extends AppCompatActivity {
     }
     
     /**
-     * Check for existing chat models or prompt download
+     * Show model management dialog with current model and options
      */
-    private void checkForChatModels() {
-        GoogleChatModel[] availableModels = {
-            GoogleChatModel.PHI_3_MINI,
-            GoogleChatModel.GEMMA_2B,
-            GoogleChatModel.STABLE_CODE_3B,
-            GoogleChatModel.GEMMA_7B,
-            GoogleChatModel.LLAMA_3_8B
-        };
+    private void showModelManagementDialog() {
+        String currentModelName = aiHelper.getCurrentModelName();
+        String currentModelPath = aiHelper.getCurrentModelPath();
         
-        // Check if any model is already downloaded
-        GoogleChatModel downloadedModel = null;
-        for (GoogleChatModel model : availableModels) {
-            if (model.isDownloaded(this)) {
-                downloadedModel = model;
-                break;
-            }
-        }
-        
-        if (downloadedModel != null) {
-            currentModel = downloadedModel;
-            updateModelStatus("Using " + currentModel.getDisplayName(), false);
+        StringBuilder message = new StringBuilder();
+        message.append("Current Model:\n");
+        if (currentModelPath != null && !currentModelPath.isEmpty()) {
+            message.append("📱 ").append(currentModelName).append("\n\n");
+            message.append("Path: ").append(currentModelPath);
         } else {
-            updateModelStatus("No chat model available", false);
-            showModelDownloadDialog();
+            message.append("💡 Smart Fallback (No model downloaded)");
         }
+        
+        new AlertDialog.Builder(this)
+            .setTitle("🤖 AI Model Management")
+            .setMessage(message.toString())
+            .setPositiveButton("Switch Model", (dialog, which) -> showAvailableModelsDialog())
+            .setNeutralButton("Download New Model", (dialog, which) -> showModelDownloadDialog())
+            .setNegativeButton("Close", null)
+            .show();
+    }
+    
+    /**
+     * Show available downloaded models to switch between
+     */
+    private void showAvailableModelsDialog() {
+        modelStatusText.setText("🔍 Searching for models...");
+        progressBarDownload.setVisibility(View.VISIBLE);
+        aiHelper.detectExistingGoogleModels(this, createGoogleDownloadCallback());
+    }
+    
+    /**
+     * Update display to show current active model
+     */
+    private void updateCurrentModelStatus() {
+        String currentModelName = aiHelper.getCurrentModelName();
+        String currentModelPath = aiHelper.getCurrentModelPath();
+        
+        // Update model info display
+        if (tvModelInfo != null) {
+            tvModelInfo.setText(currentModelName);
+        }
+        
+        if (currentModelPath != null && !currentModelPath.isEmpty()) {
+            modelStatusText.setText("📱 Model: " + currentModelName);
+        } else {
+            modelStatusText.setText("💡 Smart Fallback Active");
+        }
+        progressBarDownload.setVisibility(View.GONE);
     }
     
     /**
      * Show dialog to select from downloaded Google models
      */
     private void showGoogleModelSelectionDialog() {
-        GoogleChatModel[] availableModels = {
-            GoogleChatModel.PHI_3_MINI,
-            GoogleChatModel.GEMMA_2B,
-            GoogleChatModel.STABLE_CODE_3B,
-            GoogleChatModel.GEMMA_7B,
-            GoogleChatModel.LLAMA_3_8B
-        };
-        
-        java.util.List<GoogleChatModel> downloadedModels = new java.util.ArrayList<>();
-        java.util.List<String> modelNames = new java.util.ArrayList<>();
-        
-        for (GoogleChatModel model : availableModels) {
-            if (model.isDownloaded(this)) {
-                downloadedModels.add(model);
-                modelNames.add(model.getDisplayName() + " (" + formatBytes(model.getSizeInBytes()) + ")");
-            }
-        }
-        
-        if (downloadedModels.isEmpty()) {
-            Toast.makeText(this, "No models downloaded. Use download option to get models.", Toast.LENGTH_LONG).show();
-            return;
-        }
-        
-        new AlertDialog.Builder(this)
-            .setTitle("🤖 Select Chat Model")
-            .setItems(modelNames.toArray(new String[0]), (dialog, which) -> {
-                currentModel = downloadedModels.get(which);
-                updateModelStatus("Using " + currentModel.getDisplayName(), false);
-                Toast.makeText(this, "Switched to " + currentModel.getDisplayName(), Toast.LENGTH_SHORT).show();
-            })
-            .show();
+        modelStatusText.setText("🔍 Searching for models...");
+        progressBarDownload.setVisibility(View.VISIBLE);
+        Toast.makeText(this, "🔍 Scanning for downloaded models...", Toast.LENGTH_SHORT).show();
+        aiHelper.detectExistingGoogleModels(this, createGoogleDownloadCallback());
     }
     
     /**
-     * Show dialog to download new models using Google's architecture
+     * Show dialog to download new models - uses Google AI Edge architecture
      */
     private void showModelDownloadDialog() {
-        GoogleChatModel[] availableModels = {
-            GoogleChatModel.PHI_3_MINI,
-            GoogleChatModel.GEMMA_2B,
-            GoogleChatModel.STABLE_CODE_3B,
-            GoogleChatModel.GEMMA_7B,
-            GoogleChatModel.LLAMA_3_8B
-        };
-        
-        String[] modelDescriptions = new String[availableModels.length];
-        for (int i = 0; i < availableModels.length; i++) {
-            GoogleChatModel model = availableModels[i];
-            String status = model.isDownloaded(this) ? " ✅ Downloaded" : " ⬇️ " + formatBytes(model.getSizeInBytes());
-            modelDescriptions[i] = model.getDisplayName() + "\n" + model.getInfo() + status;
-        }
-        
-        new AlertDialog.Builder(this)
-            .setTitle("🚀 Download Chat Models")
-            .setItems(modelDescriptions, (dialog, which) -> {
-                GoogleChatModel selectedModel = availableModels[which];
-                if (selectedModel.isDownloaded(this)) {
-                    currentModel = selectedModel;
-                    updateModelStatus("Using " + currentModel.getDisplayName(), false);
-                    Toast.makeText(this, "Model already downloaded!", Toast.LENGTH_SHORT).show();
-                } else {
-                    startModelDownload(selectedModel);
-                }
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
-    }
-    
-    /**
-     * Start downloading a model using Google's exact architecture
-     */
-    private void startModelDownload(GoogleChatModel model) {
-        updateModelStatus("Downloading " + model.getDisplayName() + "...", true);
-        
-        downloadManager.downloadChatModel(model, new AISolutionHelper_backup.GoogleDownloadCallback() {
-            @Override
-            public void onProgress(int progress, String status) {
-                runOnUiThread(() -> {
-                    updateModelStatus(status, true);
-                    if (progressBarDownload != null) {
-                        progressBarDownload.setProgress(progress);
-                    }
-                });
-            }
-            
-            @Override
-            public void onComplete(String modelPath) {
-                runOnUiThread(() -> {
-                    currentModel = model;
-                    updateModelStatus("✅ " + model.getDisplayName() + " ready!", false);
-                    Toast.makeText(AIChatActivity.this, 
-                        "🎉 " + model.getDisplayName() + " downloaded successfully!", 
-                        Toast.LENGTH_LONG).show();
-                });
-            }
-            
-            @Override
-            public void onError(String error) {
-                runOnUiThread(() -> {
-                    updateModelStatus("❌ Download failed: " + error, false);
-                    Toast.makeText(AIChatActivity.this, "Download failed: " + error, Toast.LENGTH_LONG).show();
-                });
-            }
-        });
+        modelStatusText.setText("📥 Preparing download...");
+        progressBarDownload.setVisibility(View.VISIBLE);
+        progressBarDownload.setProgress(0);
+        Toast.makeText(this, "🚀 Starting Google AI Edge download...", Toast.LENGTH_LONG).show();
+        aiHelper.downloadModelWithWorkManager(this, createGoogleDownloadCallback());
     }
     
     /**

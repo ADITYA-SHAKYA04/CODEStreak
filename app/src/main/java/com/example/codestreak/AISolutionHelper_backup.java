@@ -104,9 +104,9 @@ public class AISolutionHelper_backup implements LifecycleObserver {
     };
     
     // Enhanced configuration constants
-    private static final int MAX_TOKENS = 2048;
+    private static final int MAX_TOKENS = 512;  // Reduced for concise chat responses
     private static final int TOP_K = 40;
-    private static final float TEMPERATURE = 0.8f;
+    private static final float TEMPERATURE = 0.5f;  // More focused responses
     private static final int RANDOM_SEED = 42;
     private static final int DOWNLOAD_TIMEOUT_SECONDS = 300; // 5 minutes
     private static final int MAX_RETRY_ATTEMPTS = 3;
@@ -371,31 +371,293 @@ public class AISolutionHelper_backup implements LifecycleObserver {
             return;
         }
         
-        // Get the first available model (can be expanded to let user choose)
-        Model selectedModel = availableModels.get(0);
+        // Show model selection dialog - let user choose which model to download
+        showModelSelectionForDownload(activity, callback);
+    }
+    
+    /**
+     * Show dialog to let user select which model to download
+     */
+    private void showModelSelectionForDownload(Activity activity, GoogleDownloadCallback callback) {
+        // Log for debugging
+        Log.d(TAG, "showModelSelectionForDownload called. Available models: " + availableModels.size());
         
-        // Check if we need Hugging Face authentication (like Google AI Edge Gallery)
-        if (selectedModel.url.contains("huggingface.co") && (selectedModel.accessToken == null || selectedModel.accessToken.isEmpty())) {
-            // Open Hugging Face login exactly like Google AI Edge Gallery
-            openHuggingFaceLogin(activity, selectedModel, callback);
+        // Check if user is already authenticated with HuggingFace
+        com.example.codestreak.auth.HuggingFaceAuthManager authManager = 
+            new com.example.codestreak.auth.HuggingFaceAuthManager(activity);
+        
+        if (authManager.isAuthenticated()) {
+            // User already has token, show model selection directly
+            Log.d(TAG, "User already authenticated, showing model selection");
+            showModelListWithAuth(activity, authManager.getAccessToken(), callback);
             return;
         }
         
-        // Update model with current auth token if available
-        if (gmailAuthToken != null) {
-            selectedModel = new Model(
-                selectedModel.name,
-                selectedModel.normalizedName,
-                selectedModel.url,
-                selectedModel.version,
-                selectedModel.downloadFileName,
-                selectedModel.isZip,
-                selectedModel.unzipDir,
-                selectedModel.totalBytes,
-                gmailAuthToken, // Use current auth token
-                selectedModel.extraDataFiles
-            );
+        // Show authentication flow
+        activity.runOnUiThread(() -> {
+            new AlertDialog.Builder(activity)
+                .setTitle("🔑 Authentication Required")
+                .setMessage("To download AI models from HuggingFace:\n\n" +
+                           "1️⃣ You need a FREE HuggingFace account\n" +
+                           "2️⃣ Create an access token (takes 1 minute)\n" +
+                           "3️⃣ Paste it once and download models\n\n" +
+                           "OR\n\n" +
+                           "💡 Use Smart Fallback (no auth needed)\n" +
+                           "   Works immediately for code questions!")
+                .setPositiveButton("Authenticate with HuggingFace", (dialog, which) -> {
+                    // Guide user to create token
+                    com.example.codestreak.auth.HuggingFaceAuthManager.showTokenSetupGuide(
+                        activity,
+                        new com.example.codestreak.auth.HuggingFaceAuthManager.AuthCallback() {
+                            @Override
+                            public void onAuthSuccess(String accessToken) {
+                                Log.d(TAG, "Authentication successful!");
+                                // Now show model selection with auth token
+                                showModelListWithAuth(activity, accessToken, callback);
+                            }
+                            
+                            @Override
+                            public void onAuthError(String error) {
+                                Log.e(TAG, "Authentication failed: " + error);
+                                activity.runOnUiThread(() -> {
+                                    new AlertDialog.Builder(activity)
+                                        .setTitle("❌ Authentication Failed")
+                                        .setMessage(error)
+                                        .setPositiveButton("Try Again", (d, w) -> 
+                                            showModelSelectionForDownload(activity, callback))
+                                        .setNegativeButton("Use Smart Fallback", (d, w) -> 
+                                            callback.onError("Using Smart Fallback"))
+                                        .show();
+                                });
+                            }
+                        }
+                    );
+                })
+                .setNegativeButton("Use Smart Fallback", (dialog, which) -> {
+                    new AlertDialog.Builder(activity)
+                        .setTitle("✅ Smart Fallback Active")
+                        .setMessage("You can ask coding questions immediately!\n\n" +
+                                   "Try:\n• 'Explain this code'\n• 'Fix this error'\n• 'Suggest improvements'")
+                        .setPositiveButton("Got it!", (d, w) -> callback.onError("Using Smart Fallback"))
+                        .show();
+                })
+                .setNeutralButton("Cancel", (dialog, which) -> {
+                    callback.onError("Download cancelled");
+                })
+                .show();
+        });
+    }
+    
+    /**
+     * Show model list with authentication token
+     */
+    private void showModelListWithAuth(Activity activity, String accessToken, GoogleDownloadCallback callback) {
+        Log.d(TAG, "showModelListWithAuth called. Token: " + (accessToken != null ? "present" : "null"));
+        Log.d(TAG, "Available models count: " + availableModels.size());
+        
+        // Ensure models are loaded
+        if (availableModels.isEmpty()) {
+            Log.w(TAG, "Models list is empty, recreating from ModelFactory");
+            availableModels.clear();
+            availableModels.addAll(ModelFactory.createCodingModels(accessToken));
+            Log.d(TAG, "Recreated models count: " + availableModels.size());
         }
+        
+        if (availableModels.isEmpty()) {
+            Log.e(TAG, "No models available even after recreation!");
+            activity.runOnUiThread(() -> {
+                new AlertDialog.Builder(activity)
+                    .setTitle("❌ No Models Available")
+                    .setMessage("Unable to load model list. Please try again.")
+                    .setPositiveButton("OK", (d, w) -> callback.onError("No models available"))
+                    .show();
+            });
+            return;
+        }
+        
+        // Create model options with full details and download status
+        final String[] modelDescriptions = new String[availableModels.size()];
+        
+        for (int i = 0; i < availableModels.size(); i++) {
+            Model model = availableModels.get(i);
+            boolean isDownloaded = isModelDownloaded(model);
+            String status = isDownloaded ? " ✅ Downloaded" : "";
+            modelDescriptions[i] = String.format("%s%s\nSize: %s", 
+                model.name,
+                status,
+                formatBytes(model.totalBytes));
+            Log.d(TAG, "Model " + i + ": " + modelDescriptions[i] + " (downloaded: " + isDownloaded + ")");
+        }
+        
+        activity.runOnUiThread(() -> {
+            new AlertDialog.Builder(activity)
+                .setTitle("📥 Select Model (✅ Authenticated)")
+                // Remove setMessage - it conflicts with setSingleChoiceItems
+                .setSingleChoiceItems(modelDescriptions, 0, null) // Default select first item
+                .setPositiveButton("Download", (dialog, which) -> {
+                    int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                    if (selectedPosition >= 0 && selectedPosition < availableModels.size()) {
+                        Model selectedModel = availableModels.get(selectedPosition);
+                        
+                        // Check if already downloaded
+                        if (isModelDownloaded(selectedModel)) {
+                            Log.d(TAG, "Model already downloaded, switching to it");
+                            activity.runOnUiThread(() -> {
+                                new AlertDialog.Builder(activity)
+                                    .setTitle("✅ Model Already Downloaded")
+                                    .setMessage("This model is already on your device. Switch to it?")
+                                    .setPositiveButton("Switch", (d, w) -> {
+                                        // Find and use the existing model
+                                        String modelPath = context.getExternalFilesDir(null) + File.separator + 
+                                                         selectedModel.normalizedName + File.separator + 
+                                                         selectedModel.version + File.separator + 
+                                                         selectedModel.downloadFileName;
+                                        existingModelPath = modelPath;
+                                        callback.onComplete(modelPath);
+                                    })
+                                    .setNegativeButton("Cancel", null)
+                                    .show();
+                            });
+                        } else {
+                            Log.d(TAG, "Model selected for download: " + selectedPosition);
+                            startModelDownloadWithAuth(activity, selectedModel, accessToken, callback);
+                        }
+                    } else {
+                        callback.onError("No model selected");
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    callback.onError("Download cancelled");
+                })
+                .setNeutralButton("Info", (dialog, which) -> {
+                    String info = "💡 Smaller models are faster but less capable.\n" +
+                                "🚀 Downloads use secure HTTPS with authentication.\n" +
+                                "📱 Models work offline once downloaded.\n" +
+                                "🔑 Your token is stored securely.\n" +
+                                "✅ Already downloaded models can be switched to instantly.";
+                    new AlertDialog.Builder(activity)
+                        .setTitle("ℹ️ Model Information")
+                        .setMessage(info)
+                        .setPositiveButton("OK", null)
+                        .show();
+                })
+                .show();
+            Log.d(TAG, "Dialog shown with " + modelDescriptions.length + " models");
+        });
+    }
+    
+    /**
+     * Show model list for advanced users who want to try direct downloads
+     * NOTE: These will fail without HuggingFace authentication, but we show them anyway
+     */
+    private void showModelListForAdvancedUsers(Activity activity, GoogleDownloadCallback callback) {
+        if (availableModels.isEmpty()) {
+            Log.e(TAG, "No models available!");
+            activity.runOnUiThread(() -> {
+                new AlertDialog.Builder(activity)
+                    .setTitle("❌ No Models Available")
+                    .setMessage("Unable to load model list. These models require HuggingFace authentication.")
+                    .setPositiveButton("OK", (d, w) -> callback.onError("No models available"))
+                    .show();
+            });
+            return;
+        }
+        
+        // Create model options with full details
+        final String[] modelDescriptions = new String[availableModels.size()];
+        
+        for (int i = 0; i < availableModels.size(); i++) {
+            Model model = availableModels.get(i);
+            modelDescriptions[i] = String.format("%s\nSize: %s\n⚠️ Requires auth", 
+                model.name, 
+                formatBytes(model.totalBytes));
+            Log.d(TAG, "Model " + i + ": " + modelDescriptions[i]);
+        }
+        
+        activity.runOnUiThread(() -> {
+            new AlertDialog.Builder(activity)
+                .setTitle("📥 Advanced: Direct Download")
+                .setMessage("⚠️ WARNING: These downloads will fail without HuggingFace authentication.\n\n" +
+                           "For working downloads, use Google AI Edge Gallery app.")
+                .setSingleChoiceItems(modelDescriptions, -1, null)
+                .setPositiveButton("Try Download", (dialog, which) -> {
+                    int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                    if (selectedPosition >= 0 && selectedPosition < availableModels.size()) {
+                        Model selectedModel = availableModels.get(selectedPosition);
+                        startModelDownload(activity, selectedModel, callback);
+                    } else {
+                        callback.onError("No model selected");
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    callback.onError("Download cancelled");
+                })
+                .show();
+        });
+    }
+    
+    /**
+     * Start downloading the selected model WITH authentication token
+     */
+    private void startModelDownloadWithAuth(Activity activity, Model selectedModel, String accessToken, GoogleDownloadCallback callback) {
+        Log.d(TAG, "Starting download with authentication for: " + selectedModel.name);
+        
+        // Pass access token to download repository
+        // The ModelDownloadWorker will use it in Authorization header
+        downloadRepository.downloadModel(codingTask, selectedModel, accessToken, new DownloadRepository.OnStatusUpdatedCallback() {
+            @Override
+            public void onStatusUpdated(Model model, ModelDownloadStatus status) {
+                switch (status.status) {
+                    case NOT_DOWNLOADED:
+                        callback.onProgress(0, "Preparing download...");
+                        break;
+                        
+                    case IN_PROGRESS:
+                        int progress = status.totalBytes > 0 
+                            ? (int) ((status.receivedBytes * 100) / status.totalBytes) 
+                            : 0;
+                        
+                        String progressText = String.format(
+                            "Downloading: %d%% (%s/s, ETA: %s)",
+                            progress,
+                            formatBytes(status.bytesPerSecond),
+                            formatTime(status.remainingMs)
+                        );
+                        callback.onProgress(progress, progressText);
+                        break;
+                        
+                    case UNZIPPING:
+                        callback.onProgress(95, "Extracting model files...");
+                        break;
+                        
+                    case SUCCEEDED:
+                        // Calculate model path using Google's structure
+                        String modelPath = context.getExternalFilesDir(null) + File.separator + 
+                                         model.normalizedName + File.separator + 
+                                         model.version + File.separator + 
+                                         model.downloadFileName;
+                        
+                        Log.d(TAG, "Download succeeded! Model path: " + modelPath);
+                        callback.onProgress(100, "Download complete!");
+                        callback.onComplete(modelPath);
+                        break;
+                        
+                    case FAILED:
+                        String errorMsg = status.errorMessage != null ? status.errorMessage : "Unknown error";
+                        Log.e(TAG, "Download failed: " + errorMsg);
+                        callback.onError("Download failed: " + errorMsg);
+                        break;
+                }
+            }
+        });
+    }
+    
+    /**
+     * Start downloading the selected model (WITHOUT auth - will likely fail)
+     */
+    private void startModelDownload(Activity activity, Model selectedModel, GoogleDownloadCallback callback) {
+        // No authentication needed for public Hugging Face models!
+        // These URLs are direct downloads like Google AI Edge Gallery uses
         
         // Start download using Google's repository pattern
         downloadRepository.downloadModel(codingTask, selectedModel, new DownloadRepository.OnStatusUpdatedCallback() {
@@ -430,7 +692,83 @@ public class AISolutionHelper_backup implements LifecycleObserver {
                                          model.normalizedName + File.separator + 
                                          model.version + File.separator + 
                                          model.downloadFileName;
-                        callback.onComplete(modelPath);
+                        
+                        Log.d(TAG, "Download succeeded! Model path: " + modelPath);
+                        
+                        // Initialize the model immediately after download
+                        executor.execute(() -> {
+                            try {
+                                File modelFile = new File(modelPath);
+                                if (!modelFile.exists()) {
+                                    Log.e(TAG, "Model file not found at: " + modelPath);
+                                    mainHandler.post(() -> callback.onError("Downloaded model file not found at: " + modelPath));
+                                    return;
+                                }
+                                
+                                Log.d(TAG, "Model file exists. Size: " + modelFile.length() + " bytes");
+                                Log.d(TAG, "Initializing LLM with downloaded model...");
+                                mainHandler.post(() -> callback.onProgress(98, "Loading model into memory..."));
+                                
+                                // Initialize MediaPipe LLM with the downloaded model
+                                // Note: MediaPipe supports .task, .tflite, or .litertlm format
+                                String fileName = modelFile.getName().toLowerCase();
+                                if (!fileName.endsWith(".task") && !fileName.endsWith(".tflite") && !fileName.endsWith(".litertlm")) {
+                                    Log.w(TAG, "Warning: Model format may not be compatible. File: " + fileName);
+                                    Log.w(TAG, "MediaPipe LLM requires .task, .tflite, or .litertlm format, but got: " + fileName);
+                                    
+                                    // Still try to load it
+                                    try {
+                                        LlmInferenceOptions options = LlmInferenceOptions.builder()
+                                            .setModelPath(modelPath)
+                                            .setMaxTokens(MAX_TOKENS)
+                                            .build();
+                                        
+                                        if (llmInference != null) {
+                                            llmInference.close();
+                                        }
+                                        
+                                        llmInference = LlmInference.createFromOptions(context, options);
+                                        isModelLoaded.set(true);
+                                        
+                                        Log.d(TAG, "Model loaded successfully despite format warning!");
+                                        mainHandler.post(() -> callback.onComplete(modelPath));
+                                        
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Model format incompatible: " + e.getMessage());
+                                        mainHandler.post(() -> {
+                                            callback.onError("Downloaded model format (.gguf) is not compatible with MediaPipe LLM.\n\n" +
+                                                           "MediaPipe requires .task or .tflite format.\n\n" +
+                                                           "Using Smart Fallback mode instead.");
+                                        });
+                                    }
+                                    return;
+                                }
+                                
+                                LlmInferenceOptions options = LlmInferenceOptions.builder()
+                                    .setModelPath(modelPath)
+                                    .setMaxTokens(MAX_TOKENS)
+                                    .build();
+                                
+                                // Close any existing LLM instance
+                                if (llmInference != null) {
+                                    llmInference.close();
+                                }
+                                
+                                llmInference = LlmInference.createFromOptions(context, options);
+                                isModelLoaded.set(true);
+                                
+                                Log.d(TAG, "Model loaded successfully!");
+                                mainHandler.post(() -> {
+                                    callback.onComplete(modelPath);
+                                });
+                                
+                            } catch (Exception e) {
+                                Log.e(TAG, "Failed to initialize model: " + e.getMessage(), e);
+                                mainHandler.post(() -> callback.onError("Failed to load model: " + e.getMessage() + 
+                                    "\n\nThe downloaded model may not be compatible with MediaPipe LLM." +
+                                    "\n\nUsing Smart Fallback mode instead."));
+                            }
+                        });
                         break;
                         
                     case FAILED:
@@ -700,6 +1038,38 @@ public class AISolutionHelper_backup implements LifecycleObserver {
     private static final int GMAIL_AUTH_REQUEST_CODE = 9001;
     private AuthenticationCallback authCallback;
     
+    /**
+     * Get the name of the currently active model
+     */
+    public String getCurrentModelName() {
+        if (existingModelPath != null && !existingModelPath.isEmpty()) {
+            // Extract model name from path
+            File modelFile = new File(existingModelPath);
+            String fileName = modelFile.getName();
+            // Remove extension and return
+            return fileName.replaceAll("\\.(task|tflite|litertlm)$", "");
+        }
+        return "Smart Fallback";
+    }
+    
+    /**
+     * Check if a model is already downloaded
+     */
+    public boolean isModelDownloaded(Model model) {
+        File downloadDir = context.getExternalFilesDir(null);
+        if (downloadDir == null) return false;
+        
+        // Check if model exists in download directory
+        File modelDir = new File(downloadDir, model.normalizedName);
+        if (!modelDir.exists()) return false;
+        
+        File versionDir = new File(modelDir, model.version);
+        if (!versionDir.exists()) return false;
+        
+        File modelFile = new File(versionDir, model.downloadFileName);
+        return modelFile.exists() && isValidModelFile(modelFile);
+    }
+    
     // Enhanced callback interfaces with streaming support
     public interface SolutionCallback {
         void onSolutionGenerated(String response);
@@ -846,7 +1216,9 @@ public class AISolutionHelper_backup implements LifecycleObserver {
         // Initialize Google AI Edge Gallery Architecture
         this.downloadRepository = new DefaultDownloadRepository(this.context);
         this.codingTask = ModelFactory.createCodingTask();
-        this.availableModels = ModelFactory.createCodingModels(null); // Will be updated with auth token
+        this.availableModels = new java.util.ArrayList<>(ModelFactory.createCodingModels(null));
+        
+        Log.d(TAG, "AISolutionHelper_backup initialized with " + availableModels.size() + " models");
     }
     
     /**
@@ -926,12 +1298,64 @@ public class AISolutionHelper_backup implements LifecycleObserver {
      * Enhanced model file discovery with better validation
      */
     private String findBestModelFile() {
+        // First, check downloaded models from Google AI Edge Gallery structure
+        File downloadDir = context.getExternalFilesDir(null);
+        if (downloadDir != null) {
+            String downloadedModel = searchDownloadedModels(downloadDir);
+            if (downloadedModel != null) {
+                Log.d(TAG, "Found downloaded model: " + downloadedModel);
+                return downloadedModel;
+            }
+        }
+        
+        // Then check alternative paths
         for (String path : ALTERNATIVE_PATHS) {
             File file = new File(path);
             if (file.exists() && isValidModelFile(file)) {
                 Log.d(TAG, "Found valid model file at: " + path + " (size: " + formatFileSize(file.length()) + ")");
                 return path;
             }
+        }
+        return null;
+    }
+    
+    /**
+     * Search for downloaded models in the app's external files directory
+     * Follows Google AI Edge Gallery structure: {externalFilesDir}/{modelName}/{version}/{fileName}
+     */
+    private String searchDownloadedModels(File baseDir) {
+        try {
+            // Search for model directories
+            File[] modelDirs = baseDir.listFiles();
+            if (modelDirs == null) return null;
+            
+            for (File modelDir : modelDirs) {
+                if (!modelDir.isDirectory()) continue;
+                
+                // Check version directories
+                File[] versionDirs = modelDir.listFiles();
+                if (versionDirs == null) continue;
+                
+                for (File versionDir : versionDirs) {
+                    if (!versionDir.isDirectory()) continue;
+                    
+                    // Look for .task or .tflite files
+                    File[] files = versionDir.listFiles((dir, name) -> 
+                        name.endsWith(".task") || name.endsWith(".tflite") || name.endsWith(".litertlm"));
+                    
+                    if (files != null && files.length > 0) {
+                        // Return the first valid model file found
+                        for (File file : files) {
+                            if (isValidModelFile(file)) {
+                                Log.d(TAG, "Found downloaded model: " + file.getAbsolutePath());
+                                return file.getAbsolutePath();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error searching for downloaded models", e);
         }
         return null;
     }
@@ -953,7 +1377,7 @@ public class AISolutionHelper_backup implements LifecycleObserver {
         
         // Check file extension
         String fileName = file.getName().toLowerCase();
-        if (!fileName.endsWith(".task") && !fileName.endsWith(".tflite")) {
+        if (!fileName.endsWith(".task") && !fileName.endsWith(".tflite") && !fileName.endsWith(".litertlm")) {
             Log.w(TAG, "Unexpected model file extension: " + fileName);
             return false;
         }
@@ -1064,8 +1488,10 @@ public class AISolutionHelper_backup implements LifecycleObserver {
      * Build enhanced solution prompt with better structure
      */
     private String buildAdvancedSolutionPrompt(String title, String description, String examples, String constraints) {
+        // Use Gemma's turn-based format for better instruction following
         StringBuilder prompt = new StringBuilder();
         
+        prompt.append("<start_of_turn>user\n");
         prompt.append("You are an expert software engineer and algorithm specialist. ");
         prompt.append("Provide a comprehensive solution for this coding problem.\n\n");
         
@@ -1090,6 +1516,8 @@ public class AISolutionHelper_backup implements LifecycleObserver {
         prompt.append("6. Potential optimizations\n\n");
         
         prompt.append("Format your response with clear sections and code blocks.");
+        prompt.append("<end_of_turn>\n");
+        prompt.append("<start_of_turn>model\n");
         
         return prompt.toString();
     }
@@ -1656,9 +2084,24 @@ public class AISolutionHelper_backup implements LifecycleObserver {
     
     // Helper methods for prompt building
     private String buildChatPrompt(String message, String problemContext) {
-        return "Context: " + problemContext + "\n\n" +
-               "User: " + message + "\n\n" +
-               "Provide a helpful response about this coding problem.";
+        // Gemma models use turn-based format with <start_of_turn> tags
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("<start_of_turn>user\n");
+        
+        // Add context if available
+        if (problemContext != null && !problemContext.trim().isEmpty()) {
+            prompt.append("Context: ").append(problemContext).append("\n\n");
+        }
+        
+        // Add system instruction for concise responses
+        prompt.append("You are a helpful coding assistant. Provide clear, concise responses.\n\n");
+        
+        // Add user message
+        prompt.append(message);
+        prompt.append("<end_of_turn>\n");
+        prompt.append("<start_of_turn>model\n");
+        
+        return prompt.toString();
     }
     
     public boolean isModelReady() {
