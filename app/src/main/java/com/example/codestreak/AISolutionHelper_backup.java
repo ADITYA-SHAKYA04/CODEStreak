@@ -104,7 +104,7 @@ public class AISolutionHelper_backup implements LifecycleObserver {
     };
     
     // Enhanced configuration constants
-    private static final int MAX_TOKENS = 512;  // Reduced for concise chat responses
+    private static final int MAX_TOKENS = 3072;  // Increased for complete solutions with explanations
     private static final int TOP_K = 40;
     private static final float TEMPERATURE = 0.5f;  // More focused responses
     private static final int RANDOM_SEED = 42;
@@ -159,6 +159,7 @@ public class AISolutionHelper_backup implements LifecycleObserver {
     
     // Add field to store existing model path
     private String existingModelPath = null;
+    private String lastUsedModelName = null;
     
     /**
      * Detect and use existing Google AI Edge Gallery models
@@ -730,6 +731,10 @@ public class AISolutionHelper_backup implements LifecycleObserver {
                                         llmInference = LlmInference.createFromOptions(context, options);
                                         isModelLoaded.set(true);
                                         
+                                        // Save the model name
+                                        File mFile = new File(modelPath);
+                                        lastUsedModelName = mFile.getName().replaceAll("\\.(task|tflite|litertlm)$", "");
+                                        
                                         Log.d(TAG, "Model loaded successfully despite format warning!");
                                         mainHandler.post(() -> callback.onComplete(modelPath));
                                         
@@ -756,6 +761,10 @@ public class AISolutionHelper_backup implements LifecycleObserver {
                                 
                                 llmInference = LlmInference.createFromOptions(context, options);
                                 isModelLoaded.set(true);
+                                
+                                // Save the model name
+                                File mFile = new File(modelPath);
+                                lastUsedModelName = mFile.getName().replaceAll("\\.(task|tflite|litertlm)$", "");
                                 
                                 Log.d(TAG, "Model loaded successfully!");
                                 mainHandler.post(() -> {
@@ -1042,14 +1051,17 @@ public class AISolutionHelper_backup implements LifecycleObserver {
      * Get the name of the currently active model
      */
     public String getCurrentModelName() {
-        if (existingModelPath != null && !existingModelPath.isEmpty()) {
-            // Extract model name from path
+        // If we have a model loaded, show that
+        if (isModelLoaded.get() && existingModelPath != null && !existingModelPath.isEmpty()) {
             File modelFile = new File(existingModelPath);
             String fileName = modelFile.getName();
-            // Remove extension and return
             return fileName.replaceAll("\\.(task|tflite|litertlm)$", "");
         }
-        return "Smart Fallback";
+        // If no model loaded but we used one before, show that
+        if (lastUsedModelName != null && !lastUsedModelName.isEmpty()) {
+            return lastUsedModelName + " (Not Active)";
+        }
+        return "No Model Loaded";
     }
     
     /**
@@ -1265,6 +1277,10 @@ public class AISolutionHelper_backup implements LifecycleObserver {
                 llmInference = LlmInference.createFromOptions(context, options);
                 isModelLoaded.set(true);
                 isInitializing.set(false);
+                
+                // Save the model name
+                File mFile = new File(foundModelPath);
+                lastUsedModelName = mFile.getName().replaceAll("\\.(task|tflite|litertlm)$", "");
                 
                 mainHandler.post(() -> {
                     callback.onProgress("✅ MediaPipe model loaded successfully!");
@@ -1973,6 +1989,8 @@ public class AISolutionHelper_backup implements LifecycleObserver {
                     // Use MediaPipe model if available
                     String prompt = buildChatPrompt(message, problemContext);
                     response = llmInference.generateResponse(prompt);
+                    // Only remove obvious garbage at the very end
+                    response = removeRepetitiveEnding(response);
                 } else {
                     Log.d(TAG, "Using Smart Fallback for chat response");
                     // Use Smart Fallback chat system
@@ -1980,7 +1998,8 @@ public class AISolutionHelper_backup implements LifecycleObserver {
                 }
                 
                 Log.d(TAG, "Generated response length: " + response.length());
-                mainHandler.post(() -> callback.onResponseReceived(response));
+                final String finalResponse = response;
+                mainHandler.post(() -> callback.onResponseReceived(finalResponse));
                 
             } catch (Exception e) {
                 Log.e(TAG, "Error generating chat response", e);
@@ -1989,6 +2008,234 @@ public class AISolutionHelper_backup implements LifecycleObserver {
                 mainHandler.post(() -> callback.onResponseReceived(fallbackResponse));
             }
         });
+    }
+    
+    /**
+     * Remove repetitive garbage at the end while preserving actual code and explanations
+     */
+    private String removeRepetitiveEnding(String response) {
+        if (response == null || response.trim().isEmpty()) {
+            return response;
+        }
+        
+        String[] lines = response.split("\n");
+        
+        // Find where explanation/complexity section starts (preserve everything after it)
+        int explanationStartIndex = -1;
+        for (int i = lines.length - 1; i >= Math.max(0, lines.length - 20); i--) {
+            String line = lines[i].trim().toLowerCase();
+            if (line.startsWith("time complexity:") || 
+                line.startsWith("space complexity:") ||
+                line.contains("complexity analysis") ||
+                (line.contains("explanation") && line.length() < 50)) {
+                explanationStartIndex = i;
+                break;
+            }
+        }
+        
+        // If we found explanation section, don't check anything after it
+        int checkUntilIndex = explanationStartIndex > 0 ? explanationStartIndex : lines.length;
+        
+        // Only check last 25 lines before explanation section
+        int checkFromIndex = Math.max(0, checkUntilIndex - 25);
+        
+        // Strategy 1: Find exact line repetition (5+ times)
+        for (int i = checkFromIndex; i < checkUntilIndex - 4; i++) {
+            String line = lines[i].trim();
+            
+            // Skip truly empty lines
+            if (line.isEmpty()) continue;
+            
+            // Count consecutive repetitions
+            int repeatCount = 1;
+            for (int j = i + 1; j < checkUntilIndex && j < i + 20; j++) {
+                if (lines[j].trim().equals(line)) {
+                    repeatCount++;
+                } else {
+                    break;
+                }
+            }
+            
+            // If we find 5+ repetitions, cut it off but keep everything after
+            if (repeatCount >= 5) {
+                StringBuilder result = new StringBuilder();
+                // Keep everything before repetition
+                for (int k = 0; k < i; k++) {
+                    result.append(lines[k]).append("\n");
+                }
+                // Add back everything from explanation onwards
+                if (explanationStartIndex > 0) {
+                    for (int k = explanationStartIndex; k < lines.length; k++) {
+                        result.append(lines[k]).append("\n");
+                    }
+                }
+                Log.d(TAG, "Removed repetitive ending starting at line: " + line);
+                return result.toString().trim();
+            }
+        }
+        
+        // Strategy 2: Detect semantic repetition (similar phrases repeating)
+        for (int i = Math.max(0, checkUntilIndex - 20); i < checkUntilIndex - 3; i++) {
+            String line = lines[i].trim();
+            if (line.isEmpty() || line.length() < 15) continue;
+            
+            String[] words = line.toLowerCase().split("\\s+");
+            if (words.length < 4) continue;
+            
+            int similarCount = 1;
+            for (int j = i + 1; j < Math.min(i + 15, checkUntilIndex); j++) {
+                String compareLine = lines[j].trim().toLowerCase();
+                if (compareLine.isEmpty()) continue;
+                
+                int matchingWords = 0;
+                for (String word : words) {
+                    if (word.length() > 4 && compareLine.contains(word)) {
+                        matchingWords++;
+                    }
+                }
+                
+                if (matchingWords >= (words.length * 6) / 10) {
+                    similarCount++;
+                }
+            }
+            
+            // If 6+ similar lines, it's garbage
+            if (similarCount >= 6) {
+                StringBuilder result = new StringBuilder();
+                for (int k = 0; k < i; k++) {
+                    result.append(lines[k]).append("\n");
+                }
+                // Add back explanation section
+                if (explanationStartIndex > 0) {
+                    for (int k = explanationStartIndex; k < lines.length; k++) {
+                        result.append(lines[k]).append("\n");
+                    }
+                }
+                Log.d(TAG, "Removed semantically repetitive ending");
+                return result.toString().trim();
+            }
+        }
+        
+        // Strategy 3: Check for specific garbage patterns - only obvious ones
+        for (int i = Math.max(0, checkUntilIndex - 15); i < checkUntilIndex; i++) {
+            String line = lines[i].trim().toLowerCase();
+            // Only catch very obvious garbage
+            if (line.equals("this") || line.equals("this.") || 
+                line.equals("//this") || line.matches("^0+$") ||
+                line.matches("^this+$")) {
+                // Found obvious garbage
+                StringBuilder result = new StringBuilder();
+                for (int k = 0; k < i; k++) {
+                    result.append(lines[k]).append("\n");
+                }
+                // Add back explanation section
+                if (explanationStartIndex > 0) {
+                    for (int k = explanationStartIndex; k < lines.length; k++) {
+                        result.append(lines[k]).append("\n");
+                    }
+                }
+                Log.d(TAG, "Removed garbage pattern: " + line);
+                return result.toString().trim();
+            }
+        }
+        
+        return response;
+    }
+    
+    /**
+     * Clean up model response by removing repetitive or incomplete endings
+     */
+    private String cleanupModelResponse(String response) {
+        if (response == null || response.trim().isEmpty()) {
+            return response;
+        }
+        
+        String[] lines = response.split("\n");
+        StringBuilder cleaned = new StringBuilder();
+        
+        // Track sentence patterns to detect repetition
+        java.util.List<String> recentSentences = new java.util.ArrayList<>();
+        int maxRecentSentences = 5;
+        
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            String trimmedLine = line.trim();
+            
+            // Check for exact line repetition (4+ times)
+            if (!trimmedLine.isEmpty()) {
+                int sameCount = 1;
+                for (int j = i + 1; j < Math.min(i + 10, lines.length); j++) {
+                    if (lines[j].trim().equals(trimmedLine)) {
+                        sameCount++;
+                    }
+                }
+                if (sameCount >= 4) {
+                    // Found repetition, stop here
+                    break;
+                }
+            }
+            
+            // Check for semantic repetition (similar sentences)
+            if (trimmedLine.length() > 30) {
+                // Extract key words (ignore common words)
+                String[] words = trimmedLine.toLowerCase()
+                    .replaceAll("[^a-z0-9\\s]", "")
+                    .split("\\s+");
+                
+                java.util.Set<String> keyWords = new java.util.HashSet<>();
+                for (String word : words) {
+                    if (word.length() > 4 && !isCommonWord(word)) {
+                        keyWords.add(word);
+                    }
+                }
+                
+                // Check if very similar to recent sentences
+                for (String recent : recentSentences) {
+                    String[] recentWords = recent.toLowerCase()
+                        .replaceAll("[^a-z0-9\\s]", "")
+                        .split("\\s+");
+                    
+                    java.util.Set<String> recentKeyWords = new java.util.HashSet<>();
+                    for (String word : recentWords) {
+                        if (word.length() > 4 && !isCommonWord(word)) {
+                            recentKeyWords.add(word);
+                        }
+                    }
+                    
+                    // Calculate overlap
+                    java.util.Set<String> intersection = new java.util.HashSet<>(keyWords);
+                    intersection.retainAll(recentKeyWords);
+                    
+                    if (!keyWords.isEmpty() && !recentKeyWords.isEmpty()) {
+                        double similarity = (double) intersection.size() / 
+                            Math.min(keyWords.size(), recentKeyWords.size());
+                        
+                        if (similarity > 0.7) {
+                            // Too similar, likely repetitive, stop here
+                            return cleaned.toString().trim();
+                        }
+                    }
+                }
+                
+                recentSentences.add(trimmedLine);
+                if (recentSentences.size() > maxRecentSentences) {
+                    recentSentences.remove(0);
+                }
+            }
+            
+            cleaned.append(line).append("\n");
+        }
+        
+        return cleaned.toString().trim();
+    }
+    
+    private boolean isCommonWord(String word) {
+        java.util.Set<String> commonWords = new java.util.HashSet<>(java.util.Arrays.asList(
+            "this", "that", "these", "those", "the", "and", "or", "but", "for",
+            "with", "from", "about", "into", "through", "during", "before", "after",
+            "above", "below", "between", "under", "again", "further", "then", "once"
+        ));
+        return commonWords.contains(word.toLowerCase());
     }
     
     /**
@@ -2088,20 +2335,96 @@ public class AISolutionHelper_backup implements LifecycleObserver {
         StringBuilder prompt = new StringBuilder();
         prompt.append("<start_of_turn>user\n");
         
+        // Detect language from context
+        String language = detectLanguageFromContext(problemContext);
+        
         // Add context if available
         if (problemContext != null && !problemContext.trim().isEmpty()) {
             prompt.append("Context: ").append(problemContext).append("\n\n");
         }
         
-        // Add system instruction for concise responses
-        prompt.append("You are a helpful coding assistant. Provide clear, concise responses.\n\n");
+        // Enhanced system instruction for better code generation
+        prompt.append(getInstructionBlockForLanguage(language));
         
         // Add user message
-        prompt.append(message);
-        prompt.append("<end_of_turn>\n");
+        prompt.append("User request: ").append(message);
+        prompt.append("\n<end_of_turn>\n");
         prompt.append("<start_of_turn>model\n");
         
         return prompt.toString();
+    }
+    
+    private String detectLanguageFromContext(String context) {
+        if (context == null) return "the requested";
+        
+        String lower = context.toLowerCase();
+        if (lower.contains("c++") || lower.contains("cpp")) {
+            return "C++";
+        } else if (lower.contains("python") || lower.contains(".py")) {
+            return "Python";
+        } else if (lower.contains("java") || lower.contains(".java")) {
+            return "Java";
+        } else if (lower.contains("javascript") || lower.contains(".js")) {
+            return "JavaScript";
+        }
+        return "the requested";
+    }
+
+    /**
+     * Provide language-specific instruction blocks to improve model compliance
+     */
+    private String getInstructionBlockForLanguage(String language) {
+        switch (language) {
+            case "Python":
+                return "You are an expert Python developer.\n"
+                        + "Return one complete Python module or function that satisfies the request.\n"
+                        + "Output ONLY valid Python code with necessary imports and helper definitions.\n"
+                        + "Prefer using functions; include an optional main guard only if helpful for testing.\n"
+                        + "Use concise inline comments strictly when they clarify non-trivial logic.\n"
+                        + "After the final line of code, add a blank line followed by a short plain-text explanation of the approach.\n"
+                        + "Finish with 'Time Complexity: ...' and 'Space Complexity: ...' on separate lines.\n"
+                        + "Do not include markdown formatting, bullet lists, or repeated phrases.\n\n";
+
+            case "C++":
+                return "You are an expert C++17 developer.\n"
+                    + "Write COMPLETE working C++ code that solves the exact problem requested.\n"
+                    + "Always include: #include <iostream>, #include <vector>, #include <unordered_map>, etc. as needed.\n"
+                    + "Never write 'using namespace std;' - use std:: prefix for all standard library symbols.\n"
+                    + "Structure: Create a class Solution { public: ... }; with the required method, then write a complete main() function that reads input and calls the solution.\n"
+                    + "For Two Sum: the Solution class must have a method that takes vector<int> nums and int target, returning vector<int> with the indices.\n"
+                    + "The main() function must demonstrate with real test cases (e.g., nums = {2,7,11,15}, target = 9 should return {0,1}).\n"
+                    + "Do NOT write placeholder comments like '// implementation here' - write the actual algorithm.\n"
+                    + "Use std::unordered_map for O(1) lookups when efficient.\n"
+                    + "After the last closing brace of main(), add one blank line, then a plain-text explanation of your approach.\n"
+                    + "End with 'Time Complexity: ...' and 'Space Complexity: ...' on separate lines.\n"
+                    + "No markdown, no bullet points, no extra commentary.\n\n";
+
+            case "Java":
+                return "You are an expert Java developer.\n"
+                        + "Return one complete Java class or method that satisfies the request, including necessary package and import statements if required.\n"
+                        + "Ensure the code compiles under standard Java 17 without external dependencies unless explicitly requested.\n"
+                        + "Use concise inline comments for non-obvious logic only.\n"
+                        + "After the code, add a blank line, then a short plain-text explanation of the approach.\n"
+                        + "Finish with 'Time Complexity: ...' and 'Space Complexity: ...' on separate lines.\n"
+                        + "Avoid markdown syntax or redundant commentary.\n\n";
+
+            case "JavaScript":
+                return "You are an expert JavaScript developer.\n"
+                        + "Return one complete JavaScript function or module that satisfies the request, including required imports or helper functions.\n"
+                        + "Target modern ES2020 syntax compatible with Node.js and browsers unless otherwise specified.\n"
+                        + "Use concise inline comments sparingly for complex logic.\n"
+                        + "After the code, include a blank line, then a short plain-text explanation.\n"
+                        + "Conclude with 'Time Complexity: ...' and 'Space Complexity: ...' on separate lines.\n"
+                        + "Do not output markdown or redundant narrative.\n\n";
+
+            default:
+                return "You are an expert software developer.\n"
+                        + "Return one complete solution in the requested language, including all necessary imports and helper definitions.\n"
+                        + "Output ONLY valid code, using concise inline comments only when essential.\n"
+                        + "After the code, provide a blank line followed by a short plain-text explanation.\n"
+                        + "End with 'Time Complexity: ...' and 'Space Complexity: ...' on their own lines.\n"
+                        + "Avoid markdown formatting, bullet points, or repetitive phrasing.\n\n";
+        }
     }
     
     public boolean isModelReady() {

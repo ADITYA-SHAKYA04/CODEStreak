@@ -94,7 +94,14 @@ public class MainActivity extends AppCompatActivity {
         if (username == null) {
             // Try the new preferences format
             SharedPreferences newPref = getSharedPreferences("CodeStreakPrefs", Context.MODE_PRIVATE);
-            username = newPref.getString("leetcode_username", "adityashak04");
+            username = newPref.getString("leetcode_username", null);
+            if (username == null || username.isEmpty()) {
+                // Redirect to login if no username found
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            }
             if (username == null) {
                 // If no username is stored, redirect to login
                 Intent intent = new Intent(this, LoginActivity.class);

@@ -53,8 +53,8 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.google.android.material.navigation.NavigationView;
 import androidx.appcompat.widget.SwitchCompat;
 import com.google.android.material.button.MaterialButton;
-import android.Manifest;
-import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -99,6 +99,9 @@ public class ModernMainActivity extends BaseActivity {
     // Notification controls
     private SwitchCompat notificationSwitch;
     private MaterialButton testNotificationButton;
+    private MaterialButton setMorningTimeButton;
+    private MaterialButton setEveningTimeButton;
+    private TextView notificationTimeInfo;
     private TextView cacheStatusText;
     
     // Data
@@ -136,46 +139,96 @@ public class ModernMainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_modern);
         
-        // Set status bar color to match activity background
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(getResources().getColor(R.color.background_primary, getTheme()));
-        }
-        
-        // Initialize cache manager
-        cacheManager = new CacheManager(this);
-        
-        // Load cached data on startup
-        loadCachedDataOnStartup();
-        
-        // Initialize notification system
-        initializeNotificationSystem();
-        
-        // Initialize views and setup
-        initializeViews();
-        setupThemeToggle();
-        setupBottomNavigation();
-        setupPieChart();
-        setupCalendar();
-        setupDailyGoals();
-        setupNotificationControls();
-        
-        // Check if theme settings should be shown
-        if (getIntent().getBooleanExtra("show_theme_settings", false)) {
-            // Scroll to or highlight theme toggle
-            if (themeToggleContainer != null) {
-                themeToggleContainer.requestFocus();
-                // You could also show a toast or animate the theme toggle
+        try {
+            // Check if user is logged in before anything else
+            SharedPreferences prefs = getSharedPreferences("CodeStreakPrefs", MODE_PRIVATE);
+            boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+            boolean isLoggedIn = prefs.getBoolean("is_logged_in", false);
+            
+            // If not guest mode and not logged in, redirect to login
+            if (!isGuestMode && !isLoggedIn) {
+                String username = LoginActivity.getLeetCodeUsername(this);
+                if (username == null || username.isEmpty()) {
+                    // User not logged in, redirect to login
+                    Intent loginIntent = new Intent(this, LoginActivity.class);
+                    loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(loginIntent);
+                    finish();
+                    return;
+                }
             }
+            
+            setContentView(R.layout.activity_main_modern);
+            
+            // Make status bar transparent to show the actual activity background
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+                getWindow().getDecorView().setSystemUiVisibility(
+                    android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                    android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                );
+                
+                // Set status bar icon colors based on theme (light or dark mode)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    int flags = getWindow().getDecorView().getSystemUiVisibility();
+                    // If light theme (isDarkTheme is false), use dark icons
+                    if (!isDarkTheme) {
+                        getWindow().getDecorView().setSystemUiVisibility(
+                            flags | android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                        );
+                    } else {
+                        // If dark theme, use light icons (remove the flag)
+                        getWindow().getDecorView().setSystemUiVisibility(
+                            flags & ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                        );
+                    }
+                }
+            }
+            
+            // Initialize cache manager
+            cacheManager = new CacheManager(this);
+            
+            // Load cached data on startup
+            loadCachedDataOnStartup();
+            
+            // Initialize notification system
+            initializeNotificationSystem();
+            
+            // Initialize views and setup
+            initializeViews();
+            setupThemeToggle();
+            setupBottomNavigation();
+            setupPieChart();
+            setupCalendar();
+            setupDailyGoals();
+            setupNotificationControls();
+            
+            // Check if theme settings should be shown
+            if (getIntent().getBooleanExtra("show_theme_settings", false)) {
+                // Scroll to or highlight theme toggle
+                if (themeToggleContainer != null) {
+                    themeToggleContainer.requestFocus();
+                    // You could also show a toast or animate the theme toggle
+                }
+            }
+            
+            // Load user preferences
+            loadUserPreferences();
+            
+            // Initialize data
+            leetCodeAPI = new LeetCodeAPI();
+            fetchInitialData();
+            
+        } catch (Exception e) {
+            android.util.Log.e("ModernMainActivity", "Error in onCreate: " + e.getMessage());
+            e.printStackTrace();
+            // If there's an error, redirect to login
+            Intent loginIntent = new Intent(this, LoginActivity.class);
+            loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(loginIntent);
+            finish();
         }
-        
-        // Load user preferences
-        loadUserPreferences();
-        
-        // Initialize data
-        leetCodeAPI = new LeetCodeAPI();
-        fetchInitialData();
     }
     
     private void initializeNotificationSystem() {
@@ -227,6 +280,13 @@ public class ModernMainActivity extends BaseActivity {
     private void initializeViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
         navigationView = findViewById(R.id.navigationView);
+        
+        // Set navigation view theme colors based on current theme
+        if (isDarkTheme) {
+            navigationView.setBackgroundColor(getResources().getColor(R.color.modern_surface_dark, null));
+        } else {
+            navigationView.setBackgroundColor(getResources().getColor(R.color.surface_primary, null));
+        }
         
         // Initialize SwipeRefreshLayout
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
@@ -295,6 +355,9 @@ public class ModernMainActivity extends BaseActivity {
         // Notification controls
         notificationSwitch = findViewById(R.id.notificationSwitch);
         testNotificationButton = findViewById(R.id.testNotificationButton);
+        setMorningTimeButton = findViewById(R.id.setMorningTimeButton);
+        setEveningTimeButton = findViewById(R.id.setEveningTimeButton);
+        notificationTimeInfo = findViewById(R.id.notificationTimeInfo);
         cacheStatusText = findViewById(R.id.cacheStatusText);
         
         // Setup menu button
@@ -308,6 +371,102 @@ public class ModernMainActivity extends BaseActivity {
         
         // Setup navigation drawer item clicks
         setupNavigationDrawer();
+        
+        // Update navigation header after a slight delay to ensure view is ready
+        navigationView.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    updateNavigationHeader();
+                } catch (Exception e) {
+                    android.util.Log.e("NavHeader", "Error updating navigation header: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+    
+    private void updateNavigationHeader() {
+        try {
+            View headerView = navigationView.getHeaderView(0);
+            if (headerView == null) {
+                android.util.Log.w("NavHeader", "Header view is null, skipping update");
+                return;
+            }
+            TextView userNameText = headerView.findViewById(R.id.userNameText);
+            TextView userEmailText = headerView.findViewById(R.id.userEmailText);
+            ImageView profileImage = headerView.findViewById(R.id.profileImage);
+            
+            SharedPreferences prefs = getSharedPreferences("CodeStreakPrefs", MODE_PRIVATE);
+            String username = prefs.getString("leetcode_username", null);
+            String realName = prefs.getString("user_real_name", null);
+            String email = prefs.getString("user_email", null);
+            String avatarUrl = prefs.getString("user_avatar", null);
+            
+            // Debug logging
+            android.util.Log.d("NavHeader", "Username: " + username);
+            android.util.Log.d("NavHeader", "Real Name: " + realName);
+            android.util.Log.d("NavHeader", "Email: " + email);
+            android.util.Log.d("NavHeader", "Avatar URL: " + avatarUrl);
+            
+            // Set username or real name
+            if (realName != null && !realName.isEmpty()) {
+                userNameText.setText(realName);
+            } else if (username != null && !username.isEmpty()) {
+                userNameText.setText(username);
+            } else {
+                userNameText.setText("Guest User");
+            }
+            
+            // Set email or username as subtitle
+            if (email != null && !email.isEmpty()) {
+                userEmailText.setText(email);
+            } else if (username != null && !username.isEmpty()) {
+                userEmailText.setText("@" + username);
+            } else {
+                userEmailText.setText("No email");
+            }
+            
+            // Load profile image
+            if (profileImage != null) {
+                // Generate avatar URL from username
+                String imageUrl;
+                if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                    // Use provided avatar URL
+                    imageUrl = avatarUrl;
+                    if (imageUrl.startsWith("http://")) {
+                        imageUrl = imageUrl.replace("http://", "https://");
+                    }
+                } else if (username != null && !username.isEmpty()) {
+                    // Generate UI Avatars URL from username
+                    imageUrl = "https://ui-avatars.com/api/?name=" + username + "&size=200&background=FFA116&color=fff&bold=true";
+                } else {
+                    // Fallback to placeholder
+                    profileImage.setImageResource(R.drawable.profile_placeholder);
+                    return;
+                }
+                
+                android.util.Log.d("NavHeader", "Loading image from: " + imageUrl);
+                
+                try {
+                    Glide.with(ModernMainActivity.this)
+                        .load(imageUrl)
+                        .placeholder(R.drawable.profile_placeholder)
+                        .error(R.drawable.profile_placeholder)
+                        .circleCrop()
+                        .into(profileImage);
+                } catch (Exception e) {
+                    android.util.Log.e("NavHeader", "Error loading image: " + e.getMessage());
+                    e.printStackTrace();
+                    profileImage.setImageResource(R.drawable.profile_placeholder);
+                }
+            } else {
+                android.util.Log.d("NavHeader", "ImageView is null");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("NavHeader", "Error in updateNavigationHeader: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     private void setupNavigationDrawer() {
@@ -316,10 +475,12 @@ public class ModernMainActivity extends BaseActivity {
             
             if (id == R.id.nav_profile) {
                 // Handle profile click
-                // TODO: Navigate to profile activity
+                Intent profileIntent = new Intent(ModernMainActivity.this, ProfileActivity.class);
+                startActivity(profileIntent);
             } else if (id == R.id.nav_stats) {
                 // Handle stats click
-                // TODO: Navigate to stats activity
+                Intent statsIntent = new Intent(ModernMainActivity.this, StatisticsActivity.class);
+                startActivity(statsIntent);
             } else if (id == R.id.nav_achievements) {
                 // Handle achievements click
                 // TODO: Navigate to achievements activity
@@ -331,10 +492,8 @@ public class ModernMainActivity extends BaseActivity {
                 // TODO: Navigate to help activity
             } else if (id == R.id.nav_about) {
                 // Handle about click
-                // TODO: Navigate to about activity
-            } else if (id == R.id.nav_change_username) {
-                // Handle change username click
-                showChangeUsernameDialog();
+                Intent aboutIntent = new Intent(ModernMainActivity.this, AboutActivity.class);
+                startActivity(aboutIntent);
             } else if (id == R.id.nav_logout) {
                 // Handle logout click
                 handleLogout();
@@ -343,26 +502,6 @@ public class ModernMainActivity extends BaseActivity {
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         });
-    }
-    
-    private void showChangeUsernameDialog() {
-        // Clear the stored username and restart login activity
-        SharedPreferences sharedPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.remove("username");
-        editor.apply();
-        
-        // Also clear new format
-        SharedPreferences newPref = getSharedPreferences("CodeStreakPrefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor newEditor = newPref.edit();
-        newEditor.remove("leetcode_username");
-        newEditor.apply();
-        
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.putExtra("change_username", true);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        finish();
     }
     
     private void handleLogout() {
@@ -593,11 +732,6 @@ public class ModernMainActivity extends BaseActivity {
             findViewById(R.id.appBarLayout).setBackgroundColor(android.graphics.Color.TRANSPARENT);
             findViewById(R.id.navigationView).setBackgroundColor(getResources().getColor(R.color.leetcode_dark_bg, getTheme()));
             
-            // Update floating bottom navigation card for dark theme
-            if (bottomNavCard != null) {
-                bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.leetcode_card_bg, getTheme()));
-            }
-            
             // Update toolbar background for dark theme - keep transparent
             if (toolbar != null) {
                 toolbar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
@@ -606,11 +740,6 @@ public class ModernMainActivity extends BaseActivity {
             // Update toolbar icon colors for dark theme
             if (menuButton != null) {
                 menuButton.setColorFilter(getResources().getColor(R.color.leetcode_text_primary, getTheme()));
-                // Force update the menu button container background for dark theme
-                FrameLayout menuButtonContainer = (FrameLayout) menuButton.getParent();
-                if (menuButtonContainer != null) {
-                    menuButtonContainer.setBackgroundResource(R.drawable.menu_button_selector_dark);
-                }
             }
             if (toggleIcon != null) {
                 toggleIcon.setColorFilter(getResources().getColor(R.color.leetcode_text_primary, getTheme()));
@@ -697,11 +826,6 @@ public class ModernMainActivity extends BaseActivity {
             findViewById(R.id.appBarLayout).setBackgroundColor(android.graphics.Color.TRANSPARENT);
             findViewById(R.id.navigationView).setBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
             
-            // Update floating bottom navigation card for light theme
-            if (bottomNavCard != null) {
-                bottomNavCard.setCardBackgroundColor(getResources().getColor(R.color.surface_primary, getTheme()));
-            }
-            
             // Update toolbar background for light theme - keep transparent
             if (toolbar != null) {
                 toolbar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
@@ -710,11 +834,6 @@ public class ModernMainActivity extends BaseActivity {
             // Update toolbar icon colors for light theme
             if (menuButton != null) {
                 menuButton.setColorFilter(getResources().getColor(R.color.text_primary, getTheme()));
-                // Force update the menu button container background for light theme
-                FrameLayout menuButtonContainer = (FrameLayout) menuButton.getParent();
-                if (menuButtonContainer != null) {
-                    menuButtonContainer.setBackgroundResource(R.drawable.menu_button_selector_light);
-                }
             }
             if (toggleIcon != null) {
                 toggleIcon.setColorFilter(getResources().getColor(R.color.text_primary, getTheme()));
@@ -863,7 +982,10 @@ public class ModernMainActivity extends BaseActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
         });
-        navRevision.setOnClickListener(v -> selectNavItem(3));
+        navRevision.setOnClickListener(v -> {
+            Intent intent = new Intent(ModernMainActivity.this, RevisionActivity.class);
+            startActivity(intent);
+        });
         
         // Set home as default selected
         selectNavItem(0);
@@ -970,10 +1092,23 @@ public class ModernMainActivity extends BaseActivity {
     }
     
     private void updatePieChart() {
+        // Check if guest mode
+        SharedPreferences prefs = getSharedPreferences("CodeStreakPrefs", MODE_PRIVATE);
+        boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+        
         ArrayList<PieEntry> entries = new ArrayList<>();
-        entries.add(new PieEntry(easyProblems, "Easy"));
-        entries.add(new PieEntry(mediumProblems, "Medium"));
-        entries.add(new PieEntry(hardProblems, "Hard"));
+        
+        if (isGuestMode) {
+            // Show empty/placeholder data for guests
+            entries.add(new PieEntry(1, "Easy"));
+            entries.add(new PieEntry(1, "Medium"));
+            entries.add(new PieEntry(1, "Hard"));
+        } else {
+            // Show real data for logged in users
+            entries.add(new PieEntry(easyProblems, "Easy"));
+            entries.add(new PieEntry(mediumProblems, "Medium"));
+            entries.add(new PieEntry(hardProblems, "Hard"));
+        }
         
         PieDataSet dataSet = new PieDataSet(entries, "Problems");
         
@@ -988,6 +1123,9 @@ public class ModernMainActivity extends BaseActivity {
         dataSet.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
+                if (isGuestMode) {
+                    return "0";
+                }
                 return String.valueOf((int) value);
             }
         });
@@ -998,7 +1136,7 @@ public class ModernMainActivity extends BaseActivity {
         PieData data = new PieData(dataSet);
         pieChart.setData(data);
         
-        int totalProblems = easyProblems + mediumProblems + hardProblems;
+        int totalProblems = isGuestMode ? 0 : (easyProblems + mediumProblems + hardProblems);
         pieChart.setCenterText("Total\n" + totalProblems);
         
         // Update center text color based on current theme
@@ -1855,8 +1993,31 @@ public class ModernMainActivity extends BaseActivity {
     }
     
     private void fetchLeetCodeData() {
+        // Check if guest mode
+        SharedPreferences prefs = getSharedPreferences("CodeStreakPrefs", MODE_PRIVATE);
+        boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+        
+        if (isGuestMode) {
+            // For guest mode, just update the contribution grid without fetching data
+            System.out.println("DEBUG: Guest mode - skipping LeetCode data fetch");
+            runOnUiThread(() -> {
+                updateStats();
+                updateContributionGrid();
+            });
+            return;
+        }
+        
         // Get the user's LeetCode username 
-        String username = "adityashak04"; // Default username
+        String username = LoginActivity.getLeetCodeUsername(this);
+        
+        if (username == null || username.isEmpty()) {
+            System.out.println("DEBUG: No username found - skipping LeetCode data fetch");
+            runOnUiThread(() -> {
+                updateStats();
+                updateContributionGrid();
+            });
+            return;
+        }
         
         System.out.println("DEBUG: Fetching LeetCode data for username: " + username);
         
@@ -1949,6 +2110,9 @@ public class ModernMainActivity extends BaseActivity {
         submissionCalendarData = new org.json.JSONObject(submissionCalendarString);
         System.out.println("DEBUG: Parsed submission calendar with " + submissionCalendarData.length() + " entries");
         
+        // Calculate streaks from submission calendar
+        calculateStreaksFromCalendar();
+        
         // Parse problem counts
         org.json.JSONObject submitStats = matchedUser.getJSONObject("submitStats");
         org.json.JSONArray acSubmissionNum = submitStats.getJSONArray("acSubmissionNum");
@@ -2006,7 +2170,161 @@ public class ModernMainActivity extends BaseActivity {
         }
     }
     
+    /**
+     * Calculate current and longest streak from submission calendar
+     */
+    private void calculateStreaksFromCalendar() {
+        if (submissionCalendarData == null || submissionCalendarData.length() == 0) {
+            System.out.println("DEBUG: No submission data available for streak calculation");
+            currentStreak = 0;
+            longestStreak = 0;
+            return;
+        }
+        
+        try {
+            // Get all timestamps and sort them
+            java.util.List<Long> timestamps = new java.util.ArrayList<>();
+            java.util.Iterator<String> keys = submissionCalendarData.keys();
+            
+            while (keys.hasNext()) {
+                String key = keys.next();
+                long timestamp = Long.parseLong(key);
+                timestamps.add(timestamp);
+            }
+            
+            if (timestamps.isEmpty()) {
+                currentStreak = 0;
+                longestStreak = 0;
+                return;
+            }
+            
+            // Sort in descending order (most recent first)
+            java.util.Collections.sort(timestamps, java.util.Collections.reverseOrder());
+            
+            // Calculate current streak
+            Calendar today = Calendar.getInstance();
+            today.set(Calendar.HOUR_OF_DAY, 0);
+            today.set(Calendar.MINUTE, 0);
+            today.set(Calendar.SECOND, 0);
+            today.set(Calendar.MILLISECOND, 0);
+            long todayTimestamp = today.getTimeInMillis() / 1000;
+            
+            Calendar yesterday = (Calendar) today.clone();
+            yesterday.add(Calendar.DAY_OF_YEAR, -1);
+            long yesterdayTimestamp = yesterday.getTimeInMillis() / 1000;
+            
+            currentStreak = 0;
+            boolean streakActive = false;
+            
+            // Check if there's a submission today or yesterday to start the streak
+            for (long ts : timestamps) {
+                Calendar subDate = Calendar.getInstance();
+                subDate.setTimeInMillis(ts * 1000);
+                subDate.set(Calendar.HOUR_OF_DAY, 0);
+                subDate.set(Calendar.MINUTE, 0);
+                subDate.set(Calendar.SECOND, 0);
+                subDate.set(Calendar.MILLISECOND, 0);
+                long subTimestamp = subDate.getTimeInMillis() / 1000;
+                
+                if (subTimestamp == todayTimestamp || subTimestamp == yesterdayTimestamp) {
+                    streakActive = true;
+                    break;
+                }
+            }
+            
+            if (streakActive) {
+                // Count consecutive days
+                java.util.Set<Long> uniqueDays = new java.util.HashSet<>();
+                for (long ts : timestamps) {
+                    Calendar subDate = Calendar.getInstance();
+                    subDate.setTimeInMillis(ts * 1000);
+                    subDate.set(Calendar.HOUR_OF_DAY, 0);
+                    subDate.set(Calendar.MINUTE, 0);
+                    subDate.set(Calendar.SECOND, 0);
+                    subDate.set(Calendar.MILLISECOND, 0);
+                    uniqueDays.add(subDate.getTimeInMillis() / 1000);
+                }
+                
+                java.util.List<Long> sortedDays = new java.util.ArrayList<>(uniqueDays);
+                java.util.Collections.sort(sortedDays, java.util.Collections.reverseOrder());
+                
+                Calendar checkDate = Calendar.getInstance();
+                checkDate.set(Calendar.HOUR_OF_DAY, 0);
+                checkDate.set(Calendar.MINUTE, 0);
+                checkDate.set(Calendar.SECOND, 0);
+                checkDate.set(Calendar.MILLISECOND, 0);
+                
+                for (long dayTimestamp : sortedDays) {
+                    long expectedTimestamp = checkDate.getTimeInMillis() / 1000;
+                    if (dayTimestamp == expectedTimestamp) {
+                        currentStreak++;
+                        checkDate.add(Calendar.DAY_OF_YEAR, -1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            // Calculate longest streak
+            java.util.Set<Long> uniqueDays = new java.util.HashSet<>();
+            for (long ts : timestamps) {
+                Calendar subDate = Calendar.getInstance();
+                subDate.setTimeInMillis(ts * 1000);
+                subDate.set(Calendar.HOUR_OF_DAY, 0);
+                subDate.set(Calendar.MINUTE, 0);
+                subDate.set(Calendar.SECOND, 0);
+                subDate.set(Calendar.MILLISECOND, 0);
+                uniqueDays.add(subDate.getTimeInMillis() / 1000);
+            }
+            
+            java.util.List<Long> allDays = new java.util.ArrayList<>(uniqueDays);
+            java.util.Collections.sort(allDays);
+            
+            int tempStreak = 1;
+            longestStreak = 1;
+            
+            for (int i = 1; i < allDays.size(); i++) {
+                long dayDiff = (allDays.get(i) - allDays.get(i - 1)) / 86400; // Convert to days
+                
+                if (dayDiff == 1) {
+                    tempStreak++;
+                    longestStreak = Math.max(longestStreak, tempStreak);
+                } else {
+                    tempStreak = 1;
+                }
+            }
+            
+            // Cache the streak data
+            cacheManager.cacheStreakData(currentStreak, longestStreak);
+            
+            System.out.println("DEBUG: Calculated streaks - Current: " + currentStreak + ", Longest: " + longestStreak);
+            
+        } catch (Exception e) {
+            System.err.println("DEBUG: Error calculating streaks: " + e.getMessage());
+            e.printStackTrace();
+            currentStreak = 0;
+            longestStreak = 0;
+        }
+    }
+    
     private void updateStats() {
+        // Check if guest mode
+        SharedPreferences prefs = getSharedPreferences("CodeStreakPrefs", MODE_PRIVATE);
+        boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+        
+        if (isGuestMode) {
+            // Show placeholder data for guest
+            currentStreakText.setText("0");
+            longestStreakText.setText("0");
+            easyCountTableText.setText("0");
+            mediumCountTableText.setText("0");
+            hardCountTableText.setText("0");
+            totalCountText.setText("0");
+            welcomeText.setText("Hi Guest");
+            return;
+        }
+        
+        // Normal user - show real data
         currentStreakText.setText(String.valueOf(currentStreak));
         longestStreakText.setText(String.valueOf(longestStreak));
         
@@ -2118,6 +2436,21 @@ public class ModernMainActivity extends BaseActivity {
             }
             // Set text color to white for all difficulty badges
             holder.difficultyBadge.setTextColor(Color.WHITE);
+            
+            // Set click listener to navigate to problem detail
+            holder.itemView.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(ModernMainActivity.this, ProblemDetailActivity.class);
+                    intent.putExtra("problem_title", goal.getTitle());
+                    intent.putExtra("problem_difficulty", goal.getDifficulty());
+                    intent.putExtra("problem_title_slug", goal.getTitleSlug());
+                    startActivity(intent);
+                } catch (Exception e) {
+                    android.util.Log.e("DailyGoalsAdapter", "Error navigating to problem: " + e.getMessage());
+                    e.printStackTrace();
+                    Toast.makeText(ModernMainActivity.this, "Error opening problem details", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
         
         @Override
@@ -2146,12 +2479,15 @@ public class ModernMainActivity extends BaseActivity {
         private String category;
         private String difficulty;
         private boolean completed;
+        private String titleSlug;
         
         public DailyGoal(String title, String category, String difficulty, boolean completed) {
             this.title = title;
             this.category = category;
             this.difficulty = difficulty;
             this.completed = completed;
+            // Generate titleSlug from title (convert to lowercase and replace spaces with hyphens)
+            this.titleSlug = title.toLowerCase().replace(" ", "-").replace(":", "").replace("'", "");
         }
         
         // Getters
@@ -2159,6 +2495,7 @@ public class ModernMainActivity extends BaseActivity {
         public String getCategory() { return category; }
         public String getDifficulty() { return difficulty; }
         public boolean isCompleted() { return completed; }
+        public String getTitleSlug() { return titleSlug; }
     }
     
     private void showRefreshSkeleton(boolean show) {
@@ -2231,6 +2568,9 @@ public class ModernMainActivity extends BaseActivity {
         boolean notificationsEnabled = NotificationScheduler.areNotificationsEnabled(this);
         notificationSwitch.setChecked(notificationsEnabled);
         
+        // Update notification time info text
+        updateNotificationTimeInfo();
+        
         // Set up switch listener
         notificationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
@@ -2253,6 +2593,12 @@ public class ModernMainActivity extends BaseActivity {
             }
         });
         
+        // Set up morning time picker
+        setMorningTimeButton.setOnClickListener(v -> showTimePickerDialog(true));
+        
+        // Set up evening time picker
+        setEveningTimeButton.setOnClickListener(v -> showTimePickerDialog(false));
+        
         // Set up test notification button
         testNotificationButton.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
@@ -2263,6 +2609,52 @@ public class ModernMainActivity extends BaseActivity {
                 Toast.makeText(this, "Please enable notification permission first", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    
+    private void showTimePickerDialog(boolean isMorning) {
+        int currentHour = isMorning ? NotificationScheduler.getMorningHour(this) : NotificationScheduler.getEveningHour(this);
+        int currentMinute = isMorning ? NotificationScheduler.getMorningMinute(this) : NotificationScheduler.getEveningMinute(this);
+        
+        android.app.TimePickerDialog timePickerDialog = new android.app.TimePickerDialog(
+            this,
+            (view, hourOfDay, minute) -> {
+                if (isMorning) {
+                    NotificationScheduler.setMorningTime(this, hourOfDay, minute);
+                    Toast.makeText(this, String.format("Morning notification set to %02d:%02d", hourOfDay, minute), Toast.LENGTH_SHORT).show();
+                } else {
+                    NotificationScheduler.setEveningTime(this, hourOfDay, minute);
+                    Toast.makeText(this, String.format("Evening notification set to %02d:%02d", hourOfDay, minute), Toast.LENGTH_SHORT).show();
+                }
+                updateNotificationTimeInfo();
+            },
+            currentHour,
+            currentMinute,
+            false // Use 12-hour format
+        );
+        
+        timePickerDialog.setTitle(isMorning ? "Set Morning Notification Time" : "Set Evening Notification Time");
+        timePickerDialog.show();
+    }
+    
+    private void updateNotificationTimeInfo() {
+        int morningHour = NotificationScheduler.getMorningHour(this);
+        int morningMinute = NotificationScheduler.getMorningMinute(this);
+        int eveningHour = NotificationScheduler.getEveningHour(this);
+        int eveningMinute = NotificationScheduler.getEveningMinute(this);
+        
+        String morningTime = formatTime(morningHour, morningMinute);
+        String eveningTime = formatTime(eveningHour, eveningMinute);
+        
+        String infoText = String.format("Get reminded twice daily: morning (%s) and evening (%s) to maintain your coding streak!", 
+                                       morningTime, eveningTime);
+        notificationTimeInfo.setText(infoText);
+    }
+    
+    private String formatTime(int hour, int minute) {
+        String period = hour >= 12 ? "PM" : "AM";
+        int displayHour = hour % 12;
+        if (displayHour == 0) displayHour = 12;
+        return String.format("%d:%02d %s", displayHour, minute, period);
     }
     
     private void loadCachedDataOnStartup() {

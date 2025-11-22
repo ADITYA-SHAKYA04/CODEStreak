@@ -16,10 +16,12 @@
         <item
             android:id="@+id/nav_achievements"
             android:icon="@drawable/ic_trophy"
+            android:visible="false"
             android:title="Achievements" />
         
         <item
             android:id="@+id/nav_settings"
+            android:visible="false"
             android:icon="@drawable/ic_settings"
             android:title="Settings" />
         
@@ -30,6 +32,7 @@
             <item
                 android:id="@+id/nav_help"
                 android:icon="@drawable/ic_help"
+                android:visible="false"
                 android:title="Help and Feedback" />
             
             <item
@@ -43,11 +46,6 @@
     <!-- User Account Options -->
     <item android:title="Account">
         <menu>
-            <item
-                android:id="@+id/nav_change_username"
-                android:icon="@drawable/ic_person"
-                android:title="Change Username" />
-            
             <item
                 android:id="@+id/nav_logout"
                 android:icon="@android:drawable/ic_menu_revert"

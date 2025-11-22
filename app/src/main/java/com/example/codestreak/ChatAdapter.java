@@ -3,19 +3,20 @@ package com.example.codestreak;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.BackgroundColorSpan;
-import android.text.style.TypefaceSpan;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+import io.noties.markwon.Markwon;
+import io.noties.markwon.SoftBreakAddsNewLinePlugin;
+import io.noties.markwon.core.MarkwonTheme;
+import io.noties.markwon.html.HtmlPlugin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,10 +26,49 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     
     private final List<ChatMessage> messages;
     private final Context context;
+    private final Markwon markwon;
     
     public ChatAdapter(Context context) {
         this.context = context;
         this.messages = new ArrayList<>();
+        
+        // Check if dark theme is enabled
+        boolean isDarkTheme = (context.getResources().getConfiguration().uiMode 
+            & android.content.res.Configuration.UI_MODE_NIGHT_MASK) 
+            == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        
+        int codeBlockBgColor = ContextCompat.getColor(context, R.color.code_background);
+        int codeTextColor = ContextCompat.getColor(context, 
+            isDarkTheme ? R.color.text_primary : R.color.code_text);
+        
+        // Initialize Markwon with enhanced styling for code blocks
+        int paddingPx = (int) (12 * context.getResources().getDisplayMetrics().density);
+        
+        this.markwon = Markwon.builder(context)
+            .usePlugin(HtmlPlugin.create())
+            .usePlugin(SoftBreakAddsNewLinePlugin.create())
+            .usePlugin(new io.noties.markwon.AbstractMarkwonPlugin() {
+                @Override
+                public void configureTheme(@NonNull MarkwonTheme.Builder builder) {
+                    builder
+                        // Code block styling with enhanced visibility
+                        .codeBlockBackgroundColor(codeBlockBgColor)
+                        .codeBackgroundColor(codeBlockBgColor)
+                        .codeTextColor(codeTextColor)
+                        .codeTypeface(Typeface.MONOSPACE)
+                        .codeBlockTypeface(Typeface.MONOSPACE)
+                        .codeTextSize((int) (14 * context.getResources().getDisplayMetrics().scaledDensity))
+                        .codeBlockTextSize((int) (14 * context.getResources().getDisplayMetrics().scaledDensity))
+                        // Margins and spacing
+                        .blockMargin((int) (16 * context.getResources().getDisplayMetrics().density))
+                        .codeBlockMargin((int) (16 * context.getResources().getDisplayMetrics().density))
+                        // Padding for code blocks
+                        .listItemColor(codeTextColor)
+                        .linkColor(ContextCompat.getColor(context, R.color.accent_primary))
+                        .headingBreakHeight(0);
+                }
+            })
+            .build();
     }
     
     @Override
@@ -119,69 +159,41 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         
         void bind(ChatMessage message) {
-            // Format message with syntax highlighting
-            SpannableString formattedText = formatMessageWithCodeBlocks(message.getContent());
-            messageText.setText(formattedText);
+            // Preprocess message content to handle escape sequences
+            String processedContent = preprocessMessageContent(message.getContent());
+            
+            // Use Markwon to render markdown formatted message
+            markwon.setMarkdown(messageText, processedContent);
             timeText.setText(message.getFormattedTime());
             
             // Show/hide copy code button based on content
             if (message.isCode()) {
                 copyCodeButton.setVisibility(View.VISIBLE);
-                copyCodeButton.setOnClickListener(v -> copyCodeToClipboard(message.getContent()));
+                copyCodeButton.setOnClickListener(v -> copyCodeToClipboard(processedContent));
             } else {
                 copyCodeButton.setVisibility(View.GONE);
             }
             
             // Copy full message button
-            copyButton.setOnClickListener(v -> copyToClipboard(message.getContent()));
+            copyButton.setOnClickListener(v -> copyToClipboard(processedContent));
         }
         
-        private SpannableString formatMessageWithCodeBlocks(String text) {
-            SpannableString spannableString = new SpannableString(text);
+        private String preprocessMessageContent(String content) {
+            if (content == null) return "";
             
-            // Pattern to match code blocks ```...```
-            Pattern codeBlockPattern = Pattern.compile("```[\\s\\S]*?```");
-            Matcher matcher = codeBlockPattern.matcher(text);
+            // Replace escaped newlines with actual newlines
+            content = content.replace("\\n", "\n");
+            // Replace escaped tabs with actual tabs
+            content = content.replace("\\t", "    ");
+            // Remove any double escaping
+            content = content.replace("\\\\", "\\");
             
-            while (matcher.find()) {
-                int start = matcher.start();
-                int end = matcher.end();
-                
-                // Apply background and font styling to code blocks
-                spannableString.setSpan(
-                    new BackgroundColorSpan(ContextCompat.getColor(context, R.color.code_background)),
-                    start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-                spannableString.setSpan(
-                    new TypefaceSpan("monospace"),
-                    start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-            }
-            
-            // Pattern to match inline code `...`
-            Pattern inlineCodePattern = Pattern.compile("`[^`]+`");
-            Matcher inlineMatcher = inlineCodePattern.matcher(text);
-            
-            while (inlineMatcher.find()) {
-                int start = inlineMatcher.start();
-                int end = inlineMatcher.end();
-                
-                spannableString.setSpan(
-                    new BackgroundColorSpan(ContextCompat.getColor(context, R.color.code_background)),
-                    start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-                spannableString.setSpan(
-                    new TypefaceSpan("monospace"),
-                    start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-            }
-            
-            return spannableString;
+            return content;
         }
         
         private void copyCodeToClipboard(String message) {
             // Extract code from message
-            Pattern codePattern = Pattern.compile("```(?:java|python)?\\n([\\s\\S]*?)```");
+            Pattern codePattern = Pattern.compile("```(?:java|python|cpp|javascript)?\\n?([\\s\\S]*?)```");
             Matcher matcher = codePattern.matcher(message);
             
             StringBuilder codeBuilder = new StringBuilder();

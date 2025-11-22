@@ -25,10 +25,13 @@
     <color name="divider">#333333</color>
     <color name="nav_selected">#FFA116</color>
     <color name="nav_unselected">#666666</color>
-    <color name="code_background_color">#1E1E1E</color>
-    <color name="code_border_color">#333333</color>
-    <color name="code_text">#E0E0E0</color>
-    <color name="code_background">#1E1E1E</color>
-    <color name="code_border">#333333</color>
+    <color name="code_background_color">#263238</color>
+    <color name="code_border_color">#37474F</color>
+    <color name="code_text">#B0BEC5</color>
+    <color name="code_background">#263238</color>
+    <color name="code_border">#37474F</color>
     <color name="background_gray">#2A2A2A</color>
+    
+    <!-- AI Chat colors -->
+    <color name="ai_message_background">#1E2A3A</color>
 </resources>

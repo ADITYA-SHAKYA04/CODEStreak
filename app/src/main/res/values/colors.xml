@@ -83,7 +83,7 @@
     <color name="nav_selected">#FFA116</color>
     <color name="nav_unselected">#757575</color>
     <color name="accent_primary">#1976D2</color>
-    <color name="accent_secondary">#FFA726</color>
+    <color name="accent_secondary">#1976D2</color>
     <color name="background_primary">#F5F5F5</color>
     <color name="background_secondary">#EEEEEE</color>
     <color name="surface_primary">#FFFFFF</color>
@@ -135,9 +135,9 @@
     <color name="bottom_nav_unselected">#808080</color>
     
     <!-- Code colors -->
-    <color name="code_background_color">#F8F9FA</color>
-    <color name="code_border_color">#E9ECEF</color>
-    <color name="code_text">#495057</color>
+    <color name="code_background_color">#E8EAF6</color>
+    <color name="code_border_color">#C5CAE9</color>
+    <color name="code_text">#283593</color>
     <color name="code_keyword">#007BFF</color>
     
     <!-- Chip colors -->
@@ -150,6 +150,9 @@
     <color name="gray_text">#757575</color>
     
     <!-- Code colors -->
-    <color name="code_background">#F8F9FA</color>
-    <color name="code_border">#E9ECEF</color>
+    <color name="code_background">#E8EAF6</color>
+    <color name="code_border">#C5CAE9</color>
+    
+    <!-- AI Chat colors -->
+    <color name="ai_message_background">#E3F2FD</color>
 </resources>

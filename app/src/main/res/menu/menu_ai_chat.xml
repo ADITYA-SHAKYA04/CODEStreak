@@ -6,12 +6,14 @@
         android:id="@+id/action_select_model"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="Select Model"
+        app:iconTint="@color/accent_primary"
         app:showAsAction="ifRoom" />
     
     <item
         android:id="@+id/action_download_models"
         android:icon="@android:drawable/stat_sys_download"
         android:title="Download Models"
+        app:iconTint="@color/accent_primary"
         app:showAsAction="ifRoom" />
         
 </menu>

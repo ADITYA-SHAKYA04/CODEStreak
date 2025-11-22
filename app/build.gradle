@@ -14,6 +14,11 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Only include ARM architectures for real Android phones
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
     }
 
     buildTypes {
@@ -58,6 +63,12 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
     // Chrome Custom Tabs for OAuth flow
     implementation 'androidx.browser:browser:1.8.0'
+    // Markwon for markdown rendering in chat
+    implementation 'io.noties.markwon:core:4.6.2'
+    implementation 'io.noties.markwon:html:4.6.2'
+    // Glide for image loading
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

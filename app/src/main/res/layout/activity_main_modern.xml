@@ -12,7 +12,8 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_primary">
+        android:background="@color/background_primary"
+        android:fitsSystemWindows="true">
 
         <!-- Modern App Bar -->
         <com.google.android.material.appbar.AppBarLayout
@@ -509,12 +510,51 @@
                         </LinearLayout>
 
                         <TextView
+                            android:id="@+id/notificationTimeInfo"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Get reminded twice daily: morning (9:00 AM) and evening (8:00 PM) to maintain your coding streak!"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
-                            android:layout_marginBottom="8dp" />
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- Time Settings Section -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center"
+                            android:layout_marginBottom="12dp">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/setMorningTimeButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="8dp"
+                                android:text="Morning Time"
+                                android:textSize="12sp"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:textColor="@color/accent_primary"
+                                app:icon="@android:drawable/ic_menu_recent_history"
+                                app:iconSize="16dp"
+                                app:iconGravity="start" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/setEveningTimeButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:text="Evening Time"
+                                android:textSize="12sp"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:textColor="@color/accent_primary"
+                                app:icon="@android:drawable/ic_menu_recent_history"
+                                app:iconSize="16dp"
+                                app:iconGravity="start" />
+
+                        </LinearLayout>
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/testNotificationButton"
@@ -522,12 +562,14 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal"
                             android:text="Test Notification"
+                            android:visibility="gone"
                             android:textSize="12sp"
                             style="@style/Widget.Material3.Button.TextButton"
                             android:textColor="@color/accent_primary" />
 
                         <TextView
                             android:id="@+id/cacheStatusText"
+                            android:visibility="gone"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Cache: Loading..."
@@ -624,10 +666,10 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:layout_marginBottom="20dp"
-            app:cardBackgroundColor="@color/surface_primary"
+            app:cardBackgroundColor="@android:color/transparent"
             app:cardCornerRadius="16dp"
-            app:cardElevation="16dp"
-            app:cardMaxElevation="16dp"
+            app:cardElevation="0dp"
+            app:cardMaxElevation="0dp"
             android:visibility="visible">
 
             <include
@@ -646,7 +688,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/surface_primary"
+        android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/nav_drawer_menu" />
 

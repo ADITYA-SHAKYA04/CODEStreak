@@ -10,15 +10,15 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="0.85"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="2dp"
-        app:strokeColor="@color/background_gray"
-        app:strokeWidth="1dp">
+        app:cardCornerRadius="16dp"
+        app:cardElevation="1dp"
+        app:strokeColor="@color/accent_primary"
+        app:strokeWidth="0.5dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/surface_primary"
+            android:background="@color/ai_message_background"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -28,22 +28,22 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="12dp">
 
                 <View
                     android:id="@+id/iv_ai_avatar"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="10dp"
                     android:background="@drawable/circle_background"
-                    android:backgroundTint="@color/blue_main" />
+                    android:backgroundTint="@color/accent_primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="AI Assistant"
-                    android:textColor="@color/blue_main"
-                    android:textSize="12sp"
+                    android:textColor="@color/accent_primary"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <View
@@ -60,19 +60,25 @@
                     android:paddingHorizontal="12dp"
                     android:text="Copy"
                     android:textSize="11sp"
-                    app:cornerRadius="16dp" />
+                    app:cornerRadius="16dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="4dp" />
 
             </LinearLayout>
 
-            <!-- AI Message Content -->
+            <!-- AI Message Content with improved typography -->
             <TextView
                 android:id="@+id/tv_ai_message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="The two pointer technique is an efficient approach..."
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:lineSpacingExtra="2dp" />
+                android:textSize="15sp"
+                android:lineSpacingExtra="4dp"
+                android:lineSpacingMultiplier="1.1"
+                android:textIsSelectable="true"
+                android:maxLines="9999"
+                android:scrollbars="vertical" />
 
             <!-- Code Block (if present) -->
             <LinearLayout
@@ -133,15 +139,16 @@
 
             </LinearLayout>
 
-            <!-- Timestamp -->
+            <!-- Timestamp with better styling -->
             <TextView
                 android:id="@+id/tv_ai_time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:text="2:31 PM"
                 android:textColor="@color/text_tertiary"
-                android:textSize="11sp" />
+                android:textSize="11sp"
+                android:alpha="0.7" />
 
         </LinearLayout>
 

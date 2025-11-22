@@ -99,6 +99,19 @@
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
+                    <!-- Star Icon -->
+                    <ImageView
+                        android:id="@+id/starIcon"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginStart="12dp"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="4dp"
+                        android:src="@android:drawable/btn_star_big_off"
+                        app:tint="#999999" />
+
                 </LinearLayout>
 
                 <TextView

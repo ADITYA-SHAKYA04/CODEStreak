@@ -14,13 +14,14 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@color/surface_primary"
         android:elevation="4dp"
-        app:title="AI Code Assistant"
-        app:titleTextColor="@color/text_primary"
         app:navigationIcon="@drawable/ic_arrow_back_24"
-        app:navigationIconTint="@color/text_primary" />
+        app:navigationIconTint="@color/text_primary"
+        app:title="AI Code Assistant"
+        app:titleTextColor="@color/text_primary" />
 
     <!-- Problem Context Card -->
     <com.google.android.material.card.MaterialCardView
+        android:visibility="gone"
         android:id="@+id/card_problem_context"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -60,11 +61,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:text="Find two numbers that add up to target..."
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:maxLines="2"
-                android:ellipsize="end" />
+                android:textSize="12sp" />
 
         </LinearLayout>
 
@@ -110,14 +111,14 @@
                 android:id="@+id/tvModelInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
                 android:text="Smart Fallback"
                 android:textColor="@color/accent_primary"
                 android:textSize="11sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="4dp" />
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -129,9 +130,9 @@
             android:layout_height="4dp"
             android:layout_marginTop="8dp"
             android:progress="0"
-            android:visibility="gone"
+            android:progressBackgroundTint="@color/background_secondary"
             android:progressTint="@color/accent_primary"
-            android:progressBackgroundTint="@color/background_secondary" />
+            android:visibility="gone" />
 
     </LinearLayout>
 
@@ -220,6 +221,30 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Time complexity"
+                android:textSize="12sp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipJavaCode"
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Java"
+                android:textSize="12sp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPythonCode"
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Python"
+                android:textSize="12sp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipCppCode"
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="C++"
                 android:textSize="12sp" />
 
         </com.google.android.material.chip.ChipGroup>

@@ -16,16 +16,16 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="0.8"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="2dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="1dp"
         app:strokeWidth="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/blue_main"
+            android:background="@color/accent_primary"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="14dp">
 
             <TextView
                 android:id="@+id/tv_user_message"
@@ -33,16 +33,18 @@
                 android:layout_height="wrap_content"
                 android:text="Can you explain the two pointer technique?"
                 android:textColor="@color/white"
-                android:textSize="14sp" />
+                android:textSize="15sp"
+                android:lineSpacingExtra="2dp" />
 
             <TextView
                 android:id="@+id/tv_user_time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
                 android:gravity="end"
                 android:text="2:30 PM"
-                android:textColor="#E3F2FD"
+                android:textColor="#FFFFFF"
+                android:alpha="0.8"
                 android:textSize="11sp" />
 
         </LinearLayout>

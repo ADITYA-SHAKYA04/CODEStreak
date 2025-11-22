@@ -2,6 +2,7 @@ package com.example.codestreak;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
@@ -17,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.CheckBox;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -1626,7 +1628,7 @@ public class ProblemsActivity extends BaseActivity {
     }
     
     // Problems Adapter with loading support
-    private static class ProblemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    public static class ProblemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         private static final int VIEW_TYPE_PROBLEM = 0;
         private static final int VIEW_TYPE_LOADING = 1;
         
@@ -1692,6 +1694,7 @@ public class ProblemsActivity extends BaseActivity {
             private TextView acceptanceRate;
             private TextView companyTags;
             private RecyclerView topicTagsRecyclerView;
+            private ImageView favoriteIcon;
             
             public ProblemViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -1701,6 +1704,7 @@ public class ProblemsActivity extends BaseActivity {
                 acceptanceRate = itemView.findViewById(R.id.acceptanceRate);
                 companyTags = itemView.findViewById(R.id.companyTags);
                 topicTagsRecyclerView = itemView.findViewById(R.id.topicTagsRecyclerView);
+                favoriteIcon = itemView.findViewById(R.id.favoriteIcon);
             }
             
             public void bind(Problem problem) {
@@ -1724,6 +1728,60 @@ public class ProblemsActivity extends BaseActivity {
                         break;
                 }
                 
+                // Check if problem is starred
+                SharedPreferences prefs = context.getSharedPreferences("CodeStreakPrefs", Context.MODE_PRIVATE);
+                boolean isStarred = prefs.getBoolean("starred_" + problem.getId(), false);
+                updateStarIcon(isStarred);
+                
+                // Star icon click handler
+                favoriteIcon.setOnClickListener(v -> {
+                    boolean currentState = prefs.getBoolean("starred_" + problem.getId(), false);
+                    boolean newState = !currentState;
+                    
+                    // Save star state
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean("starred_" + problem.getId(), newState);
+                    
+                    // Save problem details for revision list
+                    if (newState) {
+                        editor.putString("starred_title_" + problem.getId(), problem.getTitle());
+                        editor.putString("starred_difficulty_" + problem.getId(), problem.getDifficulty());
+                        editor.putString("starred_slug_" + problem.getId(), problem.getTitleSlug());
+                        editor.putFloat("starred_acceptance_" + problem.getId(), (float) problem.getAcceptanceRate());
+                        editor.putString("starred_companies_" + problem.getId(), problem.getCompanies());
+                        
+                        // Save topics as comma-separated string
+                        if (problem.getTopics() != null && !problem.getTopics().isEmpty()) {
+                            String topicsStr = String.join(",", problem.getTopics());
+                            editor.putString("starred_topics_" + problem.getId(), topicsStr);
+                        }
+                        
+                        // Add to starred list
+                        String starredList = prefs.getString("starred_problems_list", "");
+                        if (!starredList.contains(String.valueOf(problem.getId()))) {
+                            starredList = starredList.isEmpty() ? String.valueOf(problem.getId()) : starredList + "," + problem.getId();
+                            editor.putString("starred_problems_list", starredList);
+                        }
+                        
+                        android.widget.Toast.makeText(context, "Added to revision ⭐", android.widget.Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Remove from starred list
+                        editor.remove("starred_companies_" + problem.getId());
+                        editor.remove("starred_topics_" + problem.getId());
+                        
+                        String starredList = prefs.getString("starred_problems_list", "");
+                        starredList = starredList.replaceAll("(^|,)" + problem.getId() + "(,|$)", "$1");
+                        starredList = starredList.replaceAll("^,|,$", "");
+                        starredList = starredList.replaceAll(",,", ",");
+                        editor.putString("starred_problems_list", starredList);
+                        
+                        android.widget.Toast.makeText(context, "Removed from revision", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                    
+                    editor.apply();
+                    updateStarIcon(newState);
+                });
+                
                 // Setup topic tags
                 LinearLayoutManager layoutManager = new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false);
                 topicTagsRecyclerView.setLayoutManager(layoutManager);
@@ -1741,6 +1799,16 @@ public class ProblemsActivity extends BaseActivity {
                     intent.putExtra("problem_companies", problem.getCompanies());
                     context.startActivity(intent);
                 });
+            }
+            
+            private void updateStarIcon(boolean isStarred) {
+                if (isStarred) {
+                    favoriteIcon.setImageResource(android.R.drawable.btn_star_big_on);
+                    favoriteIcon.setColorFilter(android.graphics.Color.parseColor("#FFA116"));
+                } else {
+                    favoriteIcon.setImageResource(android.R.drawable.btn_star_big_off);
+                    favoriteIcon.setColorFilter(android.graphics.Color.parseColor("#999999"));
+                }
             }
         }
     }
@@ -1924,7 +1992,8 @@ public class ProblemsActivity extends BaseActivity {
         });
         
         navRevision.setOnClickListener(v -> {
-            // TODO: Navigate to Revision activity when created
+            Intent intent = new Intent(ProblemsActivity.this, RevisionActivity.class);
+            startActivity(intent);
         });
         
         // Set Problems (Progress) as the selected item

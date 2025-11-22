@@ -1078,7 +1078,8 @@ public class CompanyProblemsActivity extends BaseActivity {
         });
         
         navRevision.setOnClickListener(v -> {
-            // TODO: Navigate to Revision activity when created
+            Intent intent = new Intent(CompanyProblemsActivity.this, RevisionActivity.class);
+            startActivity(intent);
         });
         
         // Set Companies (Cards) as the selected item

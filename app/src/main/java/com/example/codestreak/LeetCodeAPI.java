@@ -39,6 +39,11 @@ public class LeetCodeAPI {
                 "    }\n" +
                 "    profile {\n" +
                 "      ranking\n" +
+                "      userAvatar\n" +
+                "      realName\n" +
+                "    }\n" +
+                "    emails {\n" +
+                "      email\n" +
                 "    }\n" +
                 "  }\n" +
                 "}";

@@ -135,11 +135,17 @@ public class AIChatActivity extends AppCompatActivity {
         com.google.android.material.chip.Chip chipOptimize = findViewById(R.id.btn_optimize);
         com.google.android.material.chip.Chip chipEdgeCases = findViewById(R.id.btn_edge_cases);
         com.google.android.material.chip.Chip chipComplexity = findViewById(R.id.chipComplexity);
+        com.google.android.material.chip.Chip chipJavaCode = findViewById(R.id.chipJavaCode);
+        com.google.android.material.chip.Chip chipPythonCode = findViewById(R.id.chipPythonCode);
+        com.google.android.material.chip.Chip chipCppCode = findViewById(R.id.chipCppCode);
         
         chipExplain.setOnClickListener(v -> sendPredefinedMessage("Explain the best approach to solve this problem step by step"));
         chipOptimize.setOnClickListener(v -> sendPredefinedMessage("What are the optimizations I can apply to improve the solution?"));
         chipEdgeCases.setOnClickListener(v -> sendPredefinedMessage("What are the important edge cases and corner cases I should consider for this problem?"));
         chipComplexity.setOnClickListener(v -> sendPredefinedMessage("What is the time and space complexity of the optimal solution?"));
+        chipJavaCode.setOnClickListener(v -> sendPredefinedMessage("Show me the complete Java code solution for this problem"));
+        chipPythonCode.setOnClickListener(v -> sendPredefinedMessage("Show me the complete Python code solution for this problem"));
+        chipCppCode.setOnClickListener(v -> sendPredefinedMessage("Show me the complete C++ code solution for this problem"));
     }
     
     private void sendPredefinedMessage(String message) {

@@ -1,6 +1,7 @@
 package com.example.codestreak;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,9 +38,9 @@ public class ProblemDetailActivity extends BaseActivity {
     private TextView constraints;
     private ChipGroup topicChipGroup;
     private TextView companyTags;
-    private MaterialButton solveButton;
     private MaterialButton aiChatButton;
     private ImageView backButton;
+    private ImageView starIcon;
     private LinearLayout hintsContainer;
     private TextView hintsTitle;
     private ProgressBar loadingIndicator;
@@ -84,9 +86,9 @@ public class ProblemDetailActivity extends BaseActivity {
         constraints = findViewById(R.id.constraints);
         topicChipGroup = findViewById(R.id.topicChipGroup);
         companyTags = findViewById(R.id.companyTags);
-        solveButton = findViewById(R.id.solveButton);
         aiChatButton = findViewById(R.id.aiChatButton);
         backButton = findViewById(R.id.backButton);
+        starIcon = findViewById(R.id.starIcon);
         hintsContainer = findViewById(R.id.hintsContainer);
         hintsTitle = findViewById(R.id.hintsTitle);
         loadingIndicator = findViewById(R.id.loadingIndicator);
@@ -116,6 +118,9 @@ public class ProblemDetailActivity extends BaseActivity {
         setDifficultyBadge(difficulty);
         acceptanceRate.setText(String.format("%.1f%% Acceptance Rate", acceptance));
         companyTags.setText(companies);
+        
+        // Setup star icon
+        setupStarIcon(problemId, title, difficulty, acceptance, titleSlug);
     }
     
     private void fetchProblemDetails() {
@@ -622,8 +627,9 @@ public class ProblemDetailActivity extends BaseActivity {
                         .trim();
         }
         
-        // Additional cleanup for any remaining HTML entities
+        // Clean HTML entities and markdown-style formatting
         result = cleanHtmlEntities(result);
+        result = cleanMarkdownFormatting(result);
         
         return result.replaceAll("\n{3,}", "\n\n").trim();
     }
@@ -631,8 +637,9 @@ public class ProblemDetailActivity extends BaseActivity {
     private String cleanExamplesText(String text) {
         if (text.isEmpty()) return "";
         
-        // Clean HTML entities from examples
+        // Clean HTML entities and markdown formatting from examples
         text = cleanHtmlEntities(text);
+        text = cleanMarkdownFormatting(text);
         
         // Format examples nicely
         return text.replaceAll("\n{3,}", "\n\n").trim();
@@ -641,10 +648,30 @@ public class ProblemDetailActivity extends BaseActivity {
     private String cleanConstraintsText(String text) {
         if (text.isEmpty()) return "Constraints information not available";
         
-        // Clean HTML entities from constraints
+        // Clean HTML entities and markdown formatting from constraints
         text = cleanHtmlEntities(text);
+        text = cleanMarkdownFormatting(text);
         
         return text.replaceAll("\n{3,}", "\n\n").trim();
+    }
+    
+    /**
+     * Clean markdown-style formatting that appears in LeetCode problem descriptions
+     */
+    private String cleanMarkdownFormatting(String text) {
+        return text
+                // Remove double asterisks (bold markers)
+                .replaceAll("\\*\\*", "")
+                // Remove single asterisks around single characters/words (italic markers)  
+                .replaceAll("\\*([0-9a-zA-Z])\\*", "$1")
+                // Remove backticks (code markers)
+                .replaceAll("`([^`]+)`", "$1")
+                // Remove escaped quotes
+                .replaceAll("\\\\\"", "\"")
+                .replaceAll("\\\\'", "'")
+                // Clean up any remaining escape characters
+                .replaceAll("\\\\(.)", "$1")
+                .trim();
     }
     
     private String cleanHtmlEntities(String text) {
@@ -1058,10 +1085,6 @@ public class ProblemDetailActivity extends BaseActivity {
             startActivity(aiChatIntent);
         });
         
-        solveButton.setOnClickListener(v -> {
-            android.widget.Toast.makeText(this, "Navigate to coding environment", android.widget.Toast.LENGTH_SHORT).show();
-        });
-        
         hintsTitle.setOnClickListener(v -> {
             if (hintsContainer.getVisibility() == View.VISIBLE) {
                 hintsContainer.setVisibility(View.GONE);
@@ -1111,6 +1134,91 @@ public class ProblemDetailActivity extends BaseActivity {
             hintText.setText(hints[i]);
             
             hintsContainer.addView(hintView);
+        }
+    }
+    
+    private void setupStarIcon(int problemId, String title, String difficulty, double acceptance, String titleSlug) {
+        SharedPreferences prefs = getSharedPreferences("CodeStreakPrefs", MODE_PRIVATE);
+        boolean isStarred = prefs.getBoolean("starred_" + problemId, false);
+        
+        // Update star icon appearance based on starred state
+        updateStarIcon(isStarred);
+        
+        // Set click listener for star icon
+        starIcon.setOnClickListener(v -> {
+            boolean currentStarred = prefs.getBoolean("starred_" + problemId, false);
+            boolean newStarredState = !currentStarred;
+            
+            SharedPreferences.Editor editor = prefs.edit();
+            
+            if (newStarredState) {
+                // Save problem to revision list
+                editor.putBoolean("starred_" + problemId, true);
+                editor.putString("starred_title_" + problemId, title);
+                editor.putString("starred_difficulty_" + problemId, difficulty);
+                editor.putFloat("starred_acceptance_" + problemId, (float) acceptance);
+                editor.putString("starred_slug_" + problemId, titleSlug);
+                
+                // Save companies if available
+                String companies = getIntent().getStringExtra("problem_companies");
+                if (companies != null) {
+                    editor.putString("starred_companies_" + problemId, companies);
+                }
+                
+                // Update starred problems list
+                String starredList = prefs.getString("starred_problems_list", "");
+                if (!starredList.contains(String.valueOf(problemId))) {
+                    if (starredList.isEmpty()) {
+                        starredList = String.valueOf(problemId);
+                    } else {
+                        starredList += "," + problemId;
+                    }
+                    editor.putString("starred_problems_list", starredList);
+                }
+                
+                editor.apply();
+                updateStarIcon(true);
+                Toast.makeText(this, "Added to revision list ⭐", Toast.LENGTH_SHORT).show();
+            } else {
+                // Remove problem from revision list
+                editor.remove("starred_" + problemId);
+                editor.remove("starred_title_" + problemId);
+                editor.remove("starred_difficulty_" + problemId);
+                editor.remove("starred_acceptance_" + problemId);
+                editor.remove("starred_slug_" + problemId);
+                editor.remove("starred_companies_" + problemId);
+                editor.remove("starred_topics_" + problemId);
+                
+                // Update starred problems list
+                String starredList = prefs.getString("starred_problems_list", "");
+                if (!starredList.isEmpty()) {
+                    String[] ids = starredList.split(",");
+                    StringBuilder newList = new StringBuilder();
+                    for (String id : ids) {
+                        if (!id.equals(String.valueOf(problemId))) {
+                            if (newList.length() > 0) {
+                                newList.append(",");
+                            }
+                            newList.append(id);
+                        }
+                    }
+                    editor.putString("starred_problems_list", newList.toString());
+                }
+                
+                editor.apply();
+                updateStarIcon(false);
+                Toast.makeText(this, "Removed from revision list", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void updateStarIcon(boolean isStarred) {
+        if (isStarred) {
+            starIcon.setImageResource(android.R.drawable.btn_star_big_on);
+            starIcon.setColorFilter(android.graphics.Color.parseColor("#FFA116"));
+        } else {
+            starIcon.setImageResource(android.R.drawable.btn_star_big_off);
+            starIcon.setColorFilter(android.graphics.Color.parseColor("#999999"));
         }
     }
 }
