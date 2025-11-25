@@ -34,6 +34,14 @@ android {
     buildFeatures {
         viewBinding true
     }
+    
+    // Packaging options for 16KB page size support
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+    
     lintOptions {
         abortOnError false
         checkReleaseBuilds false
